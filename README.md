@@ -6,7 +6,7 @@
     2. Make sure the `<NineSolsPath>` points to the installed game
 3. download `ScriptEngine` from [BepInEx.Debug](https://github.com/BepInEx/BepInEx.Debug/releases/tag/r10)
    and place it in `BepInEx/plugins` to enable hot reloading
-   1. set `EnableFileSystemWatcher=true` in `BepInEx/config/com.bepis.bepinex.scriptengine.cfg` to hot reload without pressing F6
+   1. set `LoadOnStart=true` and `EnableFileSystemWatcher=true` in `BepInEx/config/com.bepis.bepinex.scriptengine.cfg` to hot reload without pressing F6
 
 When you build the project in your IDE (e.g. [Rider](https://www.jetbrains.com/de-de/rider/)) the mod should be built
 and automatically copied to `path/to/game/BepInEx/scripts/YourMod.dll`, triggering a reload from the scriptengine.
