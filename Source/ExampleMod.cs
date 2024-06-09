@@ -7,6 +7,7 @@ namespace ExampleMod;
 [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
 public class ExampleMod : BaseUnityPlugin {
     private void Awake() {
+        RCGLifeCycle.DontDestroyForever(gameObject);
         Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
         
         ToastManager.Toast("Example Toast Message");
