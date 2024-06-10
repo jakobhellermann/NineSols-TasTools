@@ -38,8 +38,8 @@
         <PackageReference Include="BepInEx.PluginInfoProps" Version="1.*" />
         <PackageReference Include="UnityEngine.Modules" Version="2022.3.18" IncludeAssets="compile" />
 
-        <!-- TODO: publish on nuget -->
-        <ProjectReference Include="../../NineSolsAPI/NineSolsAPI.Core/NineSolsAPI.Core.csproj" />
+        <!--<ProjectReference Include="../../NineSolsAPI/NineSolsAPI.Core/NineSolsAPI.Core.csproj" />-->
+        <PackageReference Include="NineSolsAPI" Version="0.1.0" />
     </ItemGroup>
 
     <Target Name="CopyMod" AfterTargets="PostBuildEvent">
