@@ -12,7 +12,7 @@
         windows: todo
         macOS: todo
         -->
-        <NineSolsPath>/home/jakob/.local/share/Steam/steamapps/common/Nine Sols</NineSolsPath>
+        <NineSolsPath>$(HOME)/.local/share/Steam/steamapps/common/Nine Sols</NineSolsPath>
         <CopyDir>$(NineSolsPath)/BepInEx/scripts</CopyDir>
         <!-- <CopyDir>$(NineSolsPath)/BepInEx/plugins</CopyDir> without ScriptEngine for hot reloading https://github.com/BepInEx/BepInEx.Debug/blob/master/README.md#scriptengine -->
     </PropertyGroup>
