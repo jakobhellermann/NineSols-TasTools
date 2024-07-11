@@ -13,6 +13,7 @@ public class ExampleMod : BaseUnityPlugin {
     private ConfigEntry<KeyboardShortcut> somethingKeyboardShortcut;
 
     private void Awake() {
+        Log.Init(Logger);
         RCGLifeCycle.DontDestroyForever(gameObject);
 
         enableSomethingConfig = Config.Bind("General.Something", "Enable", true, "Enable the thing");
