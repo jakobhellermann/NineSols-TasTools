@@ -7,12 +7,9 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <LangVersion>latest</LangVersion>
 
-        <!--
-        linux: <NineSolsPath>/home/user/.local/share/Steam/steamapps/common/Nine Sols</NineSolsPath>
-        windows: todo
-        macOS: todo
-        -->
-        <NineSolsPath>$(HOME)/.local/share/Steam/steamapps/common/Nine Sols</NineSolsPath>
+        <!-- todo macOS -->
+        <NineSolsPath Condition="'$(OS)' == 'Windows_NT'">C:/Program Files (x86)/Steam/steamapps/common/Nine Sols</NineSolsPath>
+        <NineSolsPath Condition="'$(OS)' != 'Windows_NT'">$(HOME)/.local/share/Steam/steamapps/common/Nine Sols</NineSolsPath>
         <CopyDir>$(NineSolsPath)/BepInEx/scripts</CopyDir>
         <!-- <CopyDir>$(NineSolsPath)/BepInEx/plugins</CopyDir> without ScriptEngine for hot reloading https://github.com/BepInEx/BepInEx.Debug/blob/master/README.md#scriptengine -->
     </PropertyGroup>
