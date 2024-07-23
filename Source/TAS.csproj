@@ -11,6 +11,10 @@
         <!-- todo macOS -->
         <NineSolsPath Condition="'$(OS)' == 'Windows_NT'">C:/Program Files (x86)/Steam/steamapps/common/Nine Sols</NineSolsPath>
         <NineSolsPath Condition="'$(OS)' != 'Windows_NT'">$(HOME)/.local/share/Steam/steamapps/common/Nine Sols</NineSolsPath>
+
+        <StudioCommunication Condition="'$(OS)' == 'Windows_NT'">C:\Users\Jakob\Documents\dev\celeste\StudioV3\StudioCommunication</StudioCommunication>
+        <StudioCommunication Condition="'$(OS)' != 'Windows_NT'">/home/jakob/dev/celeste/CelesteTAS-EverestInterop-MonoFix/StudioCommunication</StudioCommunication>
+
         <CopyDir>$(NineSolsPath)/BepInEx/scripts</CopyDir>
         <!-- <CopyDir>$(NineSolsPath)/BepInEx/plugins</CopyDir> without ScriptEngine for hot reloading https://github.com/BepInEx/BepInEx.Debug/blob/master/README.md#scriptengine -->
     </PropertyGroup>
@@ -39,7 +43,7 @@
         <!--        <ProjectReference Include="../../NineSolsAPI/NineSolsAPI/NineSolsAPI.csproj" />-->
         <PackageReference Include="NineSolsAPI" Version="0.3.0"/>
 
-        <ProjectReference Include="C:\Users\Jakob\Documents\dev\celeste\StudioV3\StudioCommunication/StudioCommunication.csproj"/>
+        <ProjectReference Include="$(StudioCommunication)/StudioCommunication.csproj"/>
     </ItemGroup>
 
     <Target Name="CopyMod" AfterTargets="PostBuildEvent">
