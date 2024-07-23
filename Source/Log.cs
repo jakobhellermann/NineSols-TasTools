@@ -1,6 +1,6 @@
 using BepInEx.Logging;
 
-namespace ExampleMod;
+namespace TAS;
 
 internal static class Log {
     private static ManualLogSource logSource;
@@ -19,5 +19,5 @@ internal static class Log {
 
     internal static void Message(object data) => logSource.LogMessage(data);
 
-    internal static void Warning(object data) => logSource.LogWarning(data);
+    internal static void Warn(object data) => logSource.LogWarning(data);
 }

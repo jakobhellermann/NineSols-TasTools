@@ -1,7 +1,7 @@
 # Nine Sols Example Mod
 
 1. [Install BepInEx](https://docs.bepinex.dev/articles/user_guide/installation/index.html)
-2. clone this repo ([generate from this template](https://github.com/new?template_name=NineSols-ExampleMod&template_owner=jakobhellermann), then update the `.csproj`
+2. clone this repo ([generate from this template](https://github.com/new?template_name=NineSols-TAS&template_owner=jakobhellermann), then update the `.csproj`
     1. Change `<AssemblyName>` to your mod name
     2. Make sure the `<NineSolsPath>` points to the installed game
 3. Download the `NineSolsAPI.dll` from https://github.com/nine-sols-modding/NineSolsAPI/releases/ and put it into `BepInEx/plugins`. The API provides utilities like toast messages, preloading objects etc.
