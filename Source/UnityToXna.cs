@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework.Input;
 using UnityEngine;
 
 namespace TAS {
-    public static class UnityToXNA {
+    public static class UnityToXna {
         private static readonly Dictionary<KeyCode, Keys> UnityToXnaMap = new() {
             { KeyCode.None, Keys.None },
             { KeyCode.Backspace, Keys.Back },
@@ -64,7 +64,6 @@ namespace TAS {
             { KeyCode.X, Keys.X },
             { KeyCode.Y, Keys.Y },
             { KeyCode.Z, Keys.Z },
-            { KeyCode.Underscore, Keys.OemMinus }, // Assuming shift + minus
             { KeyCode.Tilde, Keys.Oem8 },
             { KeyCode.Delete, Keys.Delete },
             { KeyCode.Keypad0, Keys.NumPad0 },
@@ -117,14 +116,9 @@ namespace TAS {
             { KeyCode.LeftControl, Keys.LeftControl },
             { KeyCode.RightAlt, Keys.RightAlt },
             { KeyCode.LeftAlt, Keys.LeftAlt },
-            { KeyCode.RightApple, Keys.RightWindows },
             { KeyCode.RightCommand, Keys.RightWindows },
-            { KeyCode.RightMeta, Keys.RightWindows },
-            { KeyCode.LeftApple, Keys.LeftWindows },
-            { KeyCode.LeftCommand, Keys.LeftWindows },
             { KeyCode.LeftMeta, Keys.LeftWindows },
             { KeyCode.LeftWindows, Keys.LeftWindows },
-            { KeyCode.RightWindows, Keys.RightWindows },
             { KeyCode.Pipe, Keys.OemPipe },
             { KeyCode.Help, Keys.Help },
             { KeyCode.Print, Keys.PrintScreen },
@@ -134,6 +128,7 @@ namespace TAS {
 
             /*{ KeyCode.Clear, Keys.Clear },
             { KeyCode.AltGr, Keys.None }, // No direct match
+            { KeyCode.Underscore, Keys.OemMinus }, // Assuming shift + minus
             { KeyCode.Hash, Keys.None },
             { KeyCode.Exclaim, Keys.Oem8 }, // No direct match in XNA, map to a special key
             { KeyCode.Dollar, Keys.D5 }, // Assuming shift + 4

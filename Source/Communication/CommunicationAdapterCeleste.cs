@@ -7,6 +7,7 @@ using NineSolsAPI;
 using StudioCommunication;
 using StudioCommunication.Util;
 using TAS.EverestInterop;
+using TAS.Input;
 using TAS.Module;
 
 namespace TAS.Communication;
@@ -21,16 +22,13 @@ public sealed class CommunicationAdapterCeleste() : CommunicationAdapterBase(Loc
         ToastManager.Toast($"On connection changed: {Connected}");
         if (Connected) {
             // Stall until input initialized to avoid sending invalid hotkey data
-            while (Hotkeys.KeysDict == null) {
-                Thread.Sleep(UpdateRate);
-            }
+            while (Hotkeys.KeysDict == null) Thread.Sleep(UpdateRate);
 
             CommunicationWrapper.SendCurrentBindings();
         }
     }
 
     protected override void HandleMessage(MessageID messageId, BinaryReader reader) {
-        ToastManager.Toast($"got {messageId}");
         switch (messageId) {
             case MessageID.FilePath:
                 var path = reader.ReadString();
@@ -42,7 +40,7 @@ public sealed class CommunicationAdapterCeleste() : CommunicationAdapterBase(Loc
             case MessageID.Hotkey:
                 var hotkey = (HotkeyID)reader.ReadByte();
                 var released = reader.ReadBoolean();
-                LogVerbose($"Received message Hotkey: {hotkey} ({(released ? "released" : "pressed")})");
+                if (!released) LogVerbose($"Received message Hotkey: {hotkey} ({(released ? "released" : "pressed")})");
 
                 Hotkeys.KeysDict[hotkey].OverrideCheck = !released;
                 break;
@@ -52,9 +50,7 @@ public sealed class CommunicationAdapterCeleste() : CommunicationAdapterBase(Loc
                 LogVerbose($"Received message Hotkey: '{settingName}'");
 
                 if (typeof(CelesteTasSettings).GetProperty(settingName) is { } property) {
-                    if (property.GetSetMethod(true) == null) {
-                        break;
-                    }
+                    if (property.GetSetMethod(true) == null) break;
 
                     var value = property.GetValue(TasSettings)!;
                     var modified = false;
@@ -122,7 +118,7 @@ public sealed class CommunicationAdapterCeleste() : CommunicationAdapterBase(Loc
                 Task.Run(() => {
                     try {
                         object? gameData = gameDataType switch {
-                            // GameDataType.ConsoleCommand => GameData.GetConsoleCommand((bool)arg!),
+                            GameDataType.ConsoleCommand => GameData.GetConsoleCommand((bool)arg!),
                             // GameDataType.ModInfo => GameData.GetModInfo(),
                             // GameDataType.ExactGameInfo => GameInfo.ExactStudioInfo,
                             // GameDataType.SettingValue => GameData.GetSettingValue((string)arg!),
@@ -142,6 +138,7 @@ public sealed class CommunicationAdapterCeleste() : CommunicationAdapterBase(Loc
                             // GameDataType.GameState => GameData.GetGameState(),
                             _ => null,
                         };
+                        if (gameData is null) ToastManager.Toast($"{gameDataType} not handled");
 
                         QueueMessage(MessageID.GameDataResponse,
                             writer => {
@@ -184,6 +181,12 @@ public sealed class CommunicationAdapterCeleste() : CommunicationAdapterBase(Loc
                 LogError($"Received unknown message ID: {messageId}");
                 break;
         }
+    }
+
+
+    public void WriteReset() {
+        QueueMessage(MessageID.Reset, _ => { });
+        LogVerbose("Sent reset");
     }
 
     public void WriteState(StudioState state) {
@@ -247,6 +250,8 @@ public sealed class CommunicationAdapterCeleste() : CommunicationAdapterBase(Loc
     }
 
     protected override void LogInfo(string message) => Log.Info($"CelesteTAS/StudioCom {message}");
+
     protected override void LogVerbose(string message) => Log.Info($"CelesteTAS/StudioCom {message}");
+
     protected override void LogError(string message) => Log.Error($"CelesteTAS/StudioCom {message}");
 }

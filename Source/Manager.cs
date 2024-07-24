@@ -1,8 +1,12 @@
 using System;
 using System.Collections.Concurrent;
+using System.IO;
+using JetBrains.Annotations;
 using StudioCommunication;
 using TAS.Communication;
 using TAS.EverestInterop;
+using TAS.Input;
+using TAS.Input.Commands;
 using TAS.Utils;
 using UnityEngine;
 
@@ -12,20 +16,29 @@ internal static class Engine {
     public static int FrameCounter => Time.frameCount;
 }
 
-internal static class TASRecorderUtils {
+internal static class TasRecorderUtils {
     public static bool Recording = false;
 }
 
 internal static class Extensions {
     public static bool Has(this States states, States flag) => (states & flag) == flag;
+
+    public static void Set(ref this States states, States flag) => states |= flag;
+
+    public static void Unset(ref this States states, States flag) => states &= ~flag;
+
     public static bool Has(this Actions states, Actions flag) => (states & flag) == flag;
+
+    public static bool Has(this FileAttributes states, FileAttributes flag) => (states & flag) == flag;
+
+    public static bool Has(this ExecuteTiming states, ExecuteTiming flag) => (states & flag) == flag;
 }
 
 public static class Manager {
     private static readonly ConcurrentQueue<Action> mainThreadActions = new();
 
     public static bool Running;
-    public static bool Recording => TASRecorderUtils.Recording;
+    public static bool Recording => TasRecorderUtils.Recording;
     public static readonly InputController Controller = new();
     public static States LastStates, States, NextStates;
     public static float FrameLoops { get; private set; } = 1f;
@@ -48,62 +61,66 @@ public static class Manager {
     private static bool ShouldForceState =>
         NextStates.Has(States.FrameStep) && !Hotkeys.FastForward.OverrideCheck && !Hotkeys.SlowForward.OverrideCheck;
 
-    /*public static void AddMainThreadAction(Action action) {
-        if (Thread.CurrentThread == MainThreadHelper.MainThread) {
-            action();
-        } else {
-            mainThreadActions.Enqueue(action);
-        }
+    public static void AddMainThreadAction(Action action) {
+        // if (Thread.CurrentThread == MainThreadHelper.MainThread) TODO
+        // action();
+        // else
+        mainThreadActions.Enqueue(action);
     }
 
     private static void ExecuteMainThreadActions() {
-        while (mainThreadActions.TryDequeue(out var action)) {
-            action.Invoke();
-        }
-    }*/
+        while (mainThreadActions.TryDequeue(out var action)) action.Invoke();
+    }
 
-    public static void Update() {
+    public static void PreFrameUpdate() {
+    }
+
+    public static void PostFrameUpdate() {
+        if (Running && !SkipFrame) {
+            Controller.AdvanceFrame(out var canPlayback);
+
+            // stop TAS if breakpoint is not placed at the end
+            if (Controller.Break && Controller.CanPlayback && !Recording) {
+                Controller.NextCommentFastForward = null;
+                NextStates |= States.FrameStep;
+                FrameLoops = 1;
+            }
+
+            if (!canPlayback)
+                DisableRun();
+            /* else if (SafeCommand.DisallowUnsafeInput && Controller.CurrentFrameInTas > 1) {
+                if (Engine.Scene is not (Level or LevelLoader or LevelExit or Emulator or LevelEnter)) {
+                    DisableRun();
+                } else if (Engine.Scene is Level level && level.Tracker.GetEntity<TextMenu>() is { } menu) {
+                    TextMenu.Item item = menu.Items.FirstOrDefault();
+                    if ((item is TextMenu.Header { Title: { } title } &&
+                         (title == Dialog.Clean("OPTIONS_TITLE") || title == Dialog.Clean("MENU_VARIANT_TITLE") ||
+                          title == Dialog.Clean("MODOPTIONS_EXTENDEDVARIANTS_PAUSEMENU_BUTTON")
+                              .ToUpperInvariant())) ||
+                        item is TextMenuExt.HeaderImage { Image: "menu/everest" }) {
+                        DisableRun();
+                    }
+                }
+            }*/
+        }
+
+
         LastStates = States;
-        // ExecuteMainThreadActions();
-        // Hotkeys.Update();
+        ExecuteMainThreadActions();
+        Hotkeys.Update();
         // Savestates.HandleSaveStates();
         HandleFrameRates();
         CheckToEnable();
         FrameStepping();
 
-        if (States.Has(States.Enable)) {
-            Running = true;
 
-            if (!SkipFrame) {
-                Controller.AdvanceFrame(out var canPlayback);
-
-                // stop TAS if breakpoint is not placed at the end
-                if (Controller.Break && Controller.CanPlayback && !Recording) {
-                    Controller.NextCommentFastForward = null;
-                    NextStates |= States.FrameStep;
-                    FrameLoops = 1;
-                }
-
-                if (!canPlayback) {
-                    DisableRun();
-                } /* else if (SafeCommand.DisallowUnsafeInput && Controller.CurrentFrameInTas > 1) {
-                    if (Engine.Scene is not (Level or LevelLoader or LevelExit or Emulator or LevelEnter)) {
-                        DisableRun();
-                    } else if (Engine.Scene is Level level && level.Tracker.GetEntity<TextMenu>() is { } menu) {
-                        TextMenu.Item item = menu.Items.FirstOrDefault();
-                        if ((item is TextMenu.Header { Title: { } title } &&
-                             (title == Dialog.Clean("OPTIONS_TITLE") || title == Dialog.Clean("MENU_VARIANT_TITLE") ||
-                              title == Dialog.Clean("MODOPTIONS_EXTENDEDVARIANTS_PAUSEMENU_BUTTON")
-                                  .ToUpperInvariant())) ||
-                            item is TextMenuExt.HeaderImage { Image: "menu/everest" }) {
-                            DisableRun();
-                        }
-                    }
-                }*/
-            }
-        } else {
-            Running = false;
+        if (LastStates.Has(States.FrameStep) != States.Has(States.FrameStep)) {
+            if (States.Has(States.FrameStep)) FrameStepStart();
+            else FrameStepStop();
         }
+
+        Running = States.Has(States.Enable);
+
 
         SendStateToStudio();
     }
@@ -112,57 +129,52 @@ public static class Manager {
         FrameLoops = 1;
 
         // Keep frame rate consistant while recording
-        if (Recording) {
-            return;
-        }
+        if (Recording) return;
 
-        if (States.Has(States.Enable) && !States.Has(States.FrameStep) && !NextStates.Has(States.FrameStep)) {
-            if (Controller.HasFastForward) {
+        if (States.Has(States.Enable) && !States.Has(States.FrameStep) && !NextStates.Has(States.FrameStep))
+            if (Controller.HasFastForward)
                 FrameLoops = Controller.FastForwardSpeed;
-            }
-
-            /*if (Hotkeys.FastForward.Check) {
+        /*if (Hotkeys.FastForward.Check) {
                 FrameLoops = TasSettings.FastForwardSpeed;
             } else if (Hotkeys.SlowForward.Check) {
                 FrameLoops = TasSettings.SlowForwardSpeed;
             }*/
-        }
     }
 
     private static void FrameStepping() {
         var frameAdvance = Hotkeys.FrameAdvance.Check && !Hotkeys.StartStop.Check;
         var pause = Hotkeys.PauseResume.Check && !Hotkeys.StartStop.Check;
 
-        if (States.Has(States.Enable)) {
-            if (NextStates.Has(States.FrameStep)) {
-                States |= States.FrameStep;
-                NextStates &= ~States.FrameStep;
-            }
+        if (!States.Has(States.Enable)) return;
 
-            if (frameAdvance && !Hotkeys.FrameAdvance.LastCheck && !Recording) {
-                if (!States.Has(States.FrameStep)) {
-                    States |= States.FrameStep;
-                    NextStates &= ~States.FrameStep;
-                } else {
-                    States &= ~States.FrameStep;
-                    NextStates |= States.FrameStep;
-                }
-            } else if (pause && !Hotkeys.PauseResume.LastCheck && !Recording) {
-                if (!States.Has(States.FrameStep)) {
-                    States |= States.FrameStep;
-                    NextStates &= ~States.FrameStep;
-                } else {
-                    States &= ~States.FrameStep;
-                    NextStates &= ~States.FrameStep;
-                }
-            } else if (LastStates.Has(States.FrameStep) && States.Has(States.FrameStep) &&
-                       (Hotkeys.FastForward.Check || (Hotkeys.SlowForward.Check &&
-                                                      Engine.FrameCounter %
-                                                      Math.Round(4 / TasSettings.SlowForwardSpeed) == 0)) &&
-                       !Hotkeys.FastForwardComment.Check) {
-                States &= ~States.FrameStep;
-                NextStates |= States.FrameStep;
+        if (NextStates.Has(States.FrameStep)) {
+            States.Set(States.FrameStep);
+            NextStates.Unset(States.FrameStep);
+        }
+
+        if (frameAdvance && !Hotkeys.FrameAdvance.LastCheck && !Recording) {
+            if (!States.Has(States.FrameStep)) {
+                States.Set(States.FrameStep);
+                NextStates.Unset(States.FrameStep);
+            } else {
+                States.Unset(States.FrameStep);
+                NextStates.Set(States.FrameStep);
             }
+        } else if (pause && !Hotkeys.PauseResume.LastCheck && !Recording) {
+            if (!States.Has(States.FrameStep)) {
+                States.Set(States.FrameStep);
+                NextStates.Unset(States.FrameStep);
+            } else {
+                States.Set(States.FrameStep);
+                NextStates.Unset(States.FrameStep);
+            }
+        } else if (LastStates.Has(States.FrameStep) && States.Has(States.FrameStep) &&
+                   (Hotkeys.FastForward.Check || (Hotkeys.SlowForward.Check &&
+                                                  Engine.FrameCounter %
+                                                  Math.Round(4 / TasSettings.SlowForwardSpeed) == 0)) &&
+                   !Hotkeys.FastForwardComment.Check) {
+            States.Unset(States.FrameStep);
+            NextStates.Set(States.FrameStep);
         }
     }
 
@@ -175,16 +187,25 @@ public static class Manager {
         }*/
 
         if (Hotkeys.StartStop.Check) {
-            if (States.Has(States.Enable)) {
+            if (States.Has(States.Enable))
                 NextStates |= States.Disable;
-            } else {
+            else
                 NextStates |= States.Enable;
-            }
-        } else if (NextStates.Has(States.Enable)) {
+        } else if (NextStates.Has(States.Enable))
             EnableRun();
-        } else if (NextStates.Has(States.Disable)) {
-            DisableRun();
-        }
+        else if (NextStates.Has(States.Disable)) DisableRun();
+    }
+
+    private static void FrameStepStart() {
+        InputHelper.StopActualTime();
+        if (Player.i is { } player) player.enabled = false;
+        ConditionTimer.Instance.enabled = false;
+    }
+
+    private static void FrameStepStop() {
+        InputHelper.WriteActualTime();
+        if (Player.i is { } player) player.enabled = true;
+        ConditionTimer.Instance.enabled = true;
     }
 
     public static void EnableRun() {
@@ -205,12 +226,13 @@ public static class Manager {
     }
 
     public static void DisableRun() {
+        if (States.Has(States.FrameStep)) FrameStepStop();
+
         Running = false;
 
         LastStates = States.None;
         States = States.None;
         NextStates = States.None;
-
 
         AttributeUtils.Invoke<DisableRunAttribute>();
         Controller.Stop();
@@ -221,9 +243,7 @@ public static class Manager {
     }
 
     public static void SendStateToStudio() {
-        if (UltraFastForwarding && Engine.FrameCounter % 23 > 0) {
-            return;
-        }
+        if (UltraFastForwarding && Engine.FrameCounter % 23 > 0) return;
 
         var remainder = Player.i?.movementCounter;
 
@@ -267,9 +287,11 @@ public static class Manager {
 }
 
 [AttributeUsage(AttributeTargets.Method)]
+[MeansImplicitUse]
 internal class EnableRunAttribute : Attribute {
 }
 
 [AttributeUsage(AttributeTargets.Method)]
+[MeansImplicitUse]
 internal class DisableRunAttribute : Attribute {
 }

@@ -1,21 +1,21 @@
 ﻿namespace TAS;
 
 public class GameInfo {
-    public static string StudioInfo = "studioinfo";
-    public static string LevelName = "levelname";
-    public static string ChapterTime = "chaptertime";
+    public static string StudioInfo = "";
+    public static string LevelName = "";
+    public static string ChapterTime = "";
 
     public static void Update(bool updateVel = false) {
         StudioInfo = UpdateInfoText();
+        LevelName = (GameCore.IsAvailable() ? GameCore.Instance.gameLevel?.name : null) ?? "";
     }
 
 
     private static string UpdateInfoText() {
         var text = "";
 
-        if (!SingletonBehaviour<GameCore>.IsAvailable()) {
-            return "not yet available\n";
-        }
+
+        if (!SingletonBehaviour<GameCore>.IsAvailable()) return "not yet available\n";
 
         var core = GameCore.Instance;
 
@@ -28,7 +28,8 @@ public class GameInfo {
             text += $"Speed: {player.Velocity}\n";
             text += $"HP: {player.health.CurrentHealthValue} (+{player.health.CurrentInternalInjury})\n";
             var state = typeof(PlayerStateType).GetEnumName(player.fsm.State);
-            text += $"{state} {player.playerInput.fsm.State}\n";
+            text +=
+                $"{state} {player.playerInput.fsm.State} {(player.jumpState == Player.PlayerJumpState.None ? "" : player.jumpState)}\n";
         }
 
         var currentLevel = core.gameLevel;

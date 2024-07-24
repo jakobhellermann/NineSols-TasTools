@@ -123,9 +123,30 @@ public static class Hotkeys {
         }
 
         return currentState;
-    }
+    }*/
 
     public static void Update() {
+        var updateKey = true;
+        var updateButton = true;
+
+        if (!Manager.Running) {
+        }
+
+        if (Manager.UltraFastForwarding) updateButton = false;
+
+        if (Manager.UltraFastForwarding)
+            foreach (var hotkey in hotKeysInteractWithStudio)
+                hotkey.Update(updateKey, false);
+        else
+            foreach (var hotkey in KeysDict.Values)
+                if (hotkey == InfoHud)
+                    hotkey.Update();
+                else
+                    hotkey.Update(updateKey, updateButton);
+
+        AfterUpdate();
+    }
+    /*public static void Update() {
         if (Manager.UltraFastForwarding) {
             kbState = default;
             padState = default;
@@ -155,30 +176,10 @@ public static class Hotkeys {
                 }
             }
         }
-
-        if (Manager.UltraFastForwarding) {
-            updateButton = false;
-        }
-
-        if (Manager.UltraFastForwarding) {
-            foreach (var hotkey in hotKeysInteractWithStudio) {
-                hotkey.Update(updateKey, false);
-            }
-        } else {
-            foreach (var hotkey in KeysDict.Values) {
-                if (hotkey == InfoHud) {
-                    hotkey.Update();
-                } else {
-                    hotkey.Update(updateKey, updateButton);
-                }
-            }
-        }
-
-        AfterUpdate();
-    }
+    }*/
 
     private static void AfterUpdate() {
-        if (Engine.Scene is Level level && (!level.Paused || level.PauseMainMenuOpen || Manager.Running)) {
+        /*if (Engine.Scene is Level level && (!level.Paused || level.PauseMainMenuOpen || Manager.Running)) {
             if (Hitboxes.Pressed) {
                 TasSettings.ShowHitboxes = !TasSettings.ShowHitboxes;
                 CelesteTasModule.Instance.SaveSettings();
@@ -202,42 +203,37 @@ public static class Hotkeys {
 
         Manager.Controller.FastForwardToNextComment();
         Hud.Toggle();
-        Camera.ResetCamera();
+        Camera.ResetCamera();*/
     }
 
     [DisableRun]
     private static void ReleaseAllKeys() {
-        foreach (var hotkey in KeysDict.Values) {
-            hotkey.OverrideCheck = false;
-        }
+        foreach (var hotkey in KeysDict.Values) hotkey.OverrideCheck = false;
     }
 
     [Load]
     private static void Load() {
-        On.Celeste.Input.Initialize += InputOnInitialize;
+        /*On.Celeste.Input.Initialize += InputOnInitialize;
         var configUiType = typeof(ModuleSettingsKeyboardConfigUI);
         if (typeof(Everest).Assembly.GetTypesSafe()
                 .FirstOrDefault(t => t.FullName == "Celeste.Mod.ModuleSettingsKeyboardConfigUIV2") is { } typeV2
            ) {
             // Celeste v1.4: before Everest drop support v1.3.1.2
-            if (typeV2.GetMethodInfo("Reset") is { } resetMethodV2) {
-                resetMethodV2.IlHook(ModReload);
-            }
-        } else if (configUiType.GetMethodInfo("Reset") is { } resetMethod) {
+            if (typeV2.GetMethodInfo("Reset") is { } resetMethodV2) resetMethodV2.IlHook(ModReload);
+        } else if (configUiType.GetMethodInfo("Reset") is { } resetMethod)
             // Celeste v1.4: after Everest drop support v1.3.1.2
             resetMethod.IlHook(ModReload);
-        } else if (configUiType.GetMethodInfo("<Reload>b__6_0") is { } reloadMethod) {
+        else if (configUiType.GetMethodInfo("<Reload>b__6_0") is { } reloadMethod)
             // Celeste v1.3
-            reloadMethod.IlHook(ModReload);
-        }
+            reloadMethod.IlHook(ModReload);*/
     }
 
     [Unload]
     private static void Unload() {
-        On.Celeste.Input.Initialize -= InputOnInitialize;
+        // On.Celeste.Input.Initialize -= InputOnInitialize;
     }
 
-    private static void InputOnInitialize(On.Celeste.Input.orig_Initialize orig) {
+    /*private static void InputOnInitialize(On.Celeste.Input.orig_Initialize orig) {
         orig();
         CommunicationWrapper.SendCurrentBindings();
     }
@@ -254,23 +250,17 @@ public static class Hotkeys {
                 MoveType.After,
                 ins => ins.OpCode == OpCodes.Callvirt &&
                        ins.Operand.ToString().Contains("<Microsoft.Xna.Framework.Input.Keys>::Add(T)")
-            )) {
+            ))
             ilCursor.Emit(OpCodes.Ldloc_1).EmitDelegate(AddExtraDefaultKey);
-        }
     }
 
     private static void AddExtraDefaultKey(object bindingEntry) {
-        if (bindingFieldInfo == null) {
-            bindingFieldInfo = bindingEntry.GetType().GetFieldInfo("Binding");
-        }
+        if (bindingFieldInfo == null) bindingFieldInfo = bindingEntry.GetType().GetFieldInfo("Binding");
 
-        if (bindingFieldInfo?.GetValue(bindingEntry) is not ButtonBinding binding) {
-            return;
-        }
+        if (bindingFieldInfo?.GetValue(bindingEntry) is not ButtonBinding binding) return;
 
-        if (bindingProperties.FirstOrDefault(info => info.GetValue(TasSettings) == binding) is { } propertyInfo) {
+        if (bindingProperties.FirstOrDefault(info => info.GetValue(TasSettings) == binding) is { } propertyInfo)
             binding.Keys.Add(propertyInfo.GetCustomAttribute<DefaultButtonBinding2Attribute>().ExtraKey);
-        }
     }
     */
 
@@ -305,9 +295,7 @@ public static class Hotkeys {
 
             if (OverrideCheck) {
                 keyCheck = buttonCheck = true;
-                if (!held) {
-                    OverrideCheck = false;
-                }
+                if (!held) OverrideCheck = false;
             } else {
                 keyCheck = updateKey && IsKeyDown();
                 buttonCheck = updateButton && IsButtonDown();
@@ -319,23 +307,18 @@ public static class Hotkeys {
                 var pressedTime = DateTime.Now;
                 DoublePressed = pressedTime.Subtract(lastPressedTime).TotalMilliseconds < 200;
                 lastPressedTime = DoublePressed ? default : pressedTime;
-            } else {
+            } else
                 DoublePressed = false;
-            }
         }
 
         private bool IsKeyDown() {
-            if (Keys.Count == 0) {
-                return false;
-            }
+            if (Keys.Count == 0) return false;
 
             return keyCombo ? Keys.All(UnityEngine.Input.GetKeyDown) : Keys.Any(UnityEngine.Input.GetKeyDown);
         }
 
         private bool IsButtonDown() {
-            if (Buttons.Count == 0) {
-                return false;
-            }
+            if (Buttons.Count == 0) return false;
 
             return keyCombo
                 ? Buttons.All(UnityEngine.Input.GetMouseButtonDown)
@@ -344,13 +327,10 @@ public static class Hotkeys {
 
         public override string ToString() {
             List<string> result = [];
-            if (Keys.Count != 0) {
+            if (Keys.Count != 0)
                 result.Add(string.Join("+", Keys.Select(key => keysNameFixRegex.Replace(key.ToString(), "$1"))));
-            }
 
-            if (Buttons.Count != 0) {
-                result.Add(string.Join("+", Buttons));
-            }
+            if (Buttons.Count != 0) result.Add(string.Join("+", Buttons));
 
             return string.Join("/", result);
         }

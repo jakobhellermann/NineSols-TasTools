@@ -32,22 +32,25 @@
         <Reference Include="InControl">
             <HintPath>$(NineSolsPath)/NineSols_Data/Managed/InControl.dll</HintPath>
         </Reference>
+        <Reference Include="UniTask">
+            <HintPath>$(NineSolsPath)/NineSols_Data/Managed/UniTask.dll</HintPath>
+        </Reference>
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all"/>
-        <PackageReference Include="BepInEx.Core" Version="5.*"/>
-        <PackageReference Include="BepInEx.PluginInfoProps" Version="1.*"/>
-        <PackageReference Include="UnityEngine.Modules" Version="2022.3.18" IncludeAssets="compile"/>
+        <PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all" />
+        <PackageReference Include="BepInEx.Core" Version="5.*" />
+        <PackageReference Include="BepInEx.PluginInfoProps" Version="1.*" />
+        <PackageReference Include="UnityEngine.Modules" Version="2022.3.18" IncludeAssets="compile" />
 
         <!--        <ProjectReference Include="../../NineSolsAPI/NineSolsAPI/NineSolsAPI.csproj" />-->
-        <PackageReference Include="NineSolsAPI" Version="0.3.0"/>
+        <PackageReference Include="NineSolsAPI" Version="0.3.0" />
 
-        <ProjectReference Include="$(StudioCommunication)/StudioCommunication.csproj"/>
+        <ProjectReference Include="$(StudioCommunication)/StudioCommunication.csproj" />
     </ItemGroup>
 
     <Target Name="CopyMod" AfterTargets="PostBuildEvent">
-        <Message Importance="high" Text="copying $(TargetPath) to $(CopyDir) ..."/>
-        <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(CopyDir)" SkipUnchangedFiles="true"/>
+        <Message Importance="high" Text="copying $(TargetPath) to $(CopyDir) ..." />
+        <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(CopyDir)" SkipUnchangedFiles="true" />
     </Target>
 </Project>

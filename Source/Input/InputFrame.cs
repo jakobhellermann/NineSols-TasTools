@@ -27,21 +27,13 @@ public record InputFrame {
     public Vector2 DashOnlyVector2 {
         get {
             var result = Vector2.zero;
-            if (Actions.Has(Actions.LeftDashOnly)) {
-                result.x = -1;
-            }
+            if (Actions.Has(Actions.LeftDashOnly)) result.x = -1;
 
-            if (Actions.Has(Actions.RightDashOnly)) {
-                result.x = 1;
-            }
+            if (Actions.Has(Actions.RightDashOnly)) result.x = 1;
 
-            if (Actions.Has(Actions.UpDashOnly)) {
-                result.y = 1;
-            }
+            if (Actions.Has(Actions.UpDashOnly)) result.y = 1;
 
-            if (Actions.Has(Actions.DownDashOnly)) {
-                result.y = -1;
-            }
+            if (Actions.Has(Actions.DownDashOnly)) result.y = -1;
 
             return result;
         }
@@ -90,35 +82,26 @@ public record InputFrame {
     public string ToActionsString() {
         StringBuilder sb = new();
 
-        foreach (var pair in ActionsUtils.Chars) {
-            var actions = pair.Value;
+        foreach (var (c, actions) in ActionsUtils.Chars)
             if (HasActions(actions)) {
-                sb.Append($",{pair.Key}");
+                sb.Append($",{c}");
 
                 if (actions == Actions.DashOnly) {
-                    foreach (var dashOnlyPair in ActionsUtils.DashOnlyChars) {
-                        if (HasActions(dashOnlyPair.Value)) {
+                    foreach (var dashOnlyPair in ActionsUtils.DashOnlyChars)
+                        if (HasActions(dashOnlyPair.Value))
                             sb.Append($"{dashOnlyPair.Key}");
-                        }
-                    }
                 } else if (actions == Actions.MoveOnly) {
-                    foreach (var moveOnlyPair in ActionsUtils.MoveOnlyChars) {
-                        if (HasActions(moveOnlyPair.Value)) {
+                    foreach (var moveOnlyPair in ActionsUtils.MoveOnlyChars)
+                        if (HasActions(moveOnlyPair.Value))
                             sb.Append($"{moveOnlyPair.Key}");
-                        }
-                    }
-                } else if (actions == Actions.PressedKey) {
-                    foreach (var key in PressedKeys) {
+                } else if (actions == Actions.PressedKey)
+                    foreach (var key in PressedKeys)
                         sb.Append((char)key);
-                    }
-                } else if (actions == Actions.Feather) {
+                else if (actions == Actions.Feather) {
                     sb.Append(",").Append(Angle == 0 ? string.Empty : Angle.ToString(CultureInfo.InvariantCulture));
-                    if (Math.Abs(UpperLimit - 1f) > 1e-10) {
-                        sb.Append($",{UpperLimit}");
-                    }
+                    if (Math.Abs(UpperLimit - 1f) > 1e-10) sb.Append($",{UpperLimit}");
                 }
             }
-        }
 
         return sb.ToString();
     }
@@ -131,9 +114,8 @@ public record InputFrame {
         if (index == -1) {
             framesStr = line;
             index = 0;
-        } else {
+        } else
             framesStr = line.Substring(0, index);
-        }
 
         if (!int.TryParse(framesStr, out var frames) || frames <= 0) {
             inputFrame = null;
@@ -152,14 +134,14 @@ public record InputFrame {
         while (index < line.Length) {
             var c = char.ToUpper(line[index]);
 
-            if (c is >= 'A' and <= 'Z' && IsPressedKey()) {
+            if (c is >= 'A' and <= 'Z' && IsPressedKey())
                 inputFrame.PressedKeys.Add((Keys)c); // enum values for letter keys match ASCII uppercase letters
-            } else if (ActionsUtils.TryParse(c, out var actions)) {
-                if (IsDashOnlyDirection()) {
+            else if (ActionsUtils.TryParse(c, out var actions)) {
+                if (IsDashOnlyDirection())
                     actions = actions.ToDashOnlyActions();
-                } else if (IsMoveOnlyDirection()) {
+                else if (IsMoveOnlyDirection())
                     actions = actions.ToMoveOnlyActions();
-                } else if (actions == Actions.Feather) {
+                else if (actions == Actions.Feather) {
                     inputFrame.Actions ^= Actions.Feather;
                     index++;
                     /*var angleAndUpperLimit = line.Substring(index + 1).Trim();
