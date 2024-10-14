@@ -13,7 +13,7 @@
         <NineSolsPath Condition="'$(OS)' != 'Windows_NT'">$(HOME)/.local/share/Steam/steamapps/common/Nine Sols</NineSolsPath>
 
         <StudioCommunication Condition="'$(OS)' == 'Windows_NT'">C:\Users\Jakob\Documents\dev\celeste\StudioV3\StudioCommunication</StudioCommunication>
-        <StudioCommunication Condition="'$(OS)' != 'Windows_NT'">/home/jakob/dev/celeste/CelesteTAS-EverestInterop-MonoFix/StudioCommunication</StudioCommunication>
+        <StudioCommunication Condition="'$(OS)' != 'Windows_NT'">/home/jakob/dev/celeste/celestetas/StudioCommunication</StudioCommunication>
 
         <CopyDir>$(NineSolsPath)/BepInEx/scripts</CopyDir>
         <!-- <CopyDir>$(NineSolsPath)/BepInEx/plugins</CopyDir> without ScriptEngine for hot reloading https://github.com/BepInEx/BepInEx.Debug/blob/master/README.md#scriptengine -->

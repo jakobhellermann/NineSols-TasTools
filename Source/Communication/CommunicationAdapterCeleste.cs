@@ -8,7 +8,6 @@ using StudioCommunication;
 using StudioCommunication.Util;
 using TAS.EverestInterop;
 using TAS.Input;
-using TAS.Module;
 
 namespace TAS.Communication;
 
@@ -45,41 +44,6 @@ public sealed class CommunicationAdapterCeleste() : CommunicationAdapterBase(Loc
                 Hotkeys.KeysDict[hotkey].OverrideCheck = !released;
                 break;
 
-            case MessageID.SetSetting:
-                var settingName = reader.ReadString();
-                LogVerbose($"Received message Hotkey: '{settingName}'");
-
-                if (typeof(CelesteTasSettings).GetProperty(settingName) is { } property) {
-                    if (property.GetSetMethod(true) == null) break;
-
-                    var value = property.GetValue(TasSettings)!;
-                    var modified = false;
-
-                    if (value is bool boolValue) {
-                        property.SetValue(TasSettings, !boolValue);
-                        modified = true;
-                    } else if (value is int) {
-                        property.SetValue(TasSettings, reader.ReadInt32());
-                        modified = true;
-                    } else if (value is float) {
-                        property.SetValue(TasSettings, reader.ReadSingle());
-                        modified = true;
-                        /*} else if (value is HudOptions hudOptions) {
-                            property.SetValue(TasSettings,
-                                hudOptions.Has(HudOptions.StudioOnly) ? HudOptions.Off : HudOptions.Both);
-                            modified = true;*/
-                    } else if (value is Enum) {
-                        property.SetValue(TasSettings, ((int)value + 1) % Enum.GetValues(property.PropertyType).Length);
-                        modified = true;
-                    }
-
-                    if (modified) {
-                        /* CelesteTasModule.Instance.SaveSettings();*/
-                    }
-                }
-
-                break;
-
             /*case MessageID.SetCustomInfoTemplate:
                 var customInfoTemplate = reader.ReadString();
                 LogVerbose($"Received message SetCustomInfoTemplate: '{customInfoTemplate}'");
@@ -107,75 +71,213 @@ public sealed class CommunicationAdapterCeleste() : CommunicationAdapterBase(Loc
                 object? arg = gameDataType switch {
                     GameDataType.ConsoleCommand => reader.ReadBoolean(),
                     GameDataType.SettingValue => reader.ReadString(),
-                    GameDataType.SetCommandAutoCompleteEntries or
-                        GameDataType.InvokeCommandAutoCompleteEntries => reader.ReadObject<(string, int)>(),
                     GameDataType.RawInfo => reader.ReadObject<(string, bool)>(),
+                    GameDataType.CommandHash => reader.ReadObject<(string, string[], string, int)>(),
                     _ => null,
                 };
+                LogVerbose($"Received message RequestGameData: '{gameDataType}' ('{arg ?? "<null>"}')");
                 LogVerbose($"Received message RequestGameData: '{gameDataType}' ('{arg ?? "<null>"}')");
 
                 // Gathering data from the game can sometimes take a while (and cause a timeout)
                 Task.Run(() => {
                     try {
-                        object? gameData = gameDataType switch {
-                            GameDataType.ConsoleCommand => GameData.GetConsoleCommand((bool)arg!),
-                            // GameDataType.ModInfo => GameData.GetModInfo(),
-                            // GameDataType.ExactGameInfo => GameInfo.ExactStudioInfo,
-                            // GameDataType.SettingValue => GameData.GetSettingValue((string)arg!),
-                            // GameDataType.CompleteInfoCommand => AreaCompleteInfo.CreateCommand(),
-                            // GameDataType.ModUrl => GameData.GetModUrl(),
-                            // GameDataType.CustomInfoTemplate => !string.IsNullOrWhiteSpace(
-                            //     TasSettings.InfoCustomTemplate)
-                            //     ? TasSettings.InfoCustomTemplate
-                            //     : string.Empty,
-                            // GameDataType.SetCommandAutoCompleteEntries => GameData
-                            //     .GetSetCommandAutoCompleteEntries((((string, int))arg!).Item1,
-                            //         (((string, int))arg!).Item2).ToArray(),
-                            // GameDataType.InvokeCommandAutoCompleteEntries => GameData
-                            //     .GetInvokeCommandAutoCompleteEntries((((string, int))arg!).Item1,
-                            //         (((string, int))arg!).Item2).ToArray(),
-                            // GameDataType.RawInfo => InfoCustom.GetRawInfo(((string, bool))arg!),
-                            // GameDataType.GameState => GameData.GetGameState(),
-                            _ => null,
-                        };
-                        if (gameData is null) ToastManager.Toast($"{gameDataType} not handled");
+                        object? gameData;
+                        switch (gameDataType) {
+                            case GameDataType.ConsoleCommand:
+                                gameData = GameData.GetConsoleCommand((bool)arg!);
+                                break;
+                            /*case GameDataType.ModInfo:
+                                gameData = GameData.GetModInfo();
+                                break;
+                            case GameDataType.ExactGameInfo:
+                                gameData = GameInfo.ExactStudioInfo;
+                                break;
+                            case GameDataType.SettingValue:
+                                gameData = GameData.GetSettingValue((string)arg!);
+                                break;
+                            case GameDataType.CompleteInfoCommand:
+                                gameData = AreaCompleteInfo.CreateCommand();
+                                break;
+                            case GameDataType.ModUrl:
+                                gameData = GameData.GetModUrl();
+                                break;
+                            case GameDataType.CustomInfoTemplate:
+                                gameData = !string.IsNullOrWhiteSpace(TasSettings.InfoCustomTemplate)
+                                    ? TasSettings.InfoCustomTemplate
+                                    : string.Empty;
+                                break;
+                            case GameDataType.RawInfo:
+                                gameData = InfoCustom.GetRawInfo(((string, bool))arg!);
+                                break;
+                            case GameDataType.GameState:
+                                gameData = GameData.GetGameState();
+                                break;*/
+                            /*case GameDataType.CommandHash:
+                                var (commandName, commandArgs, filePath, fileLine) =
+                                    ((string, string[], string, int))arg!;
 
-                        QueueMessage(MessageID.GameDataResponse,
-                            writer => {
-                                writer.Write((byte)gameDataType);
-
-                                switch (gameDataType) {
-                                    case GameDataType.ConsoleCommand:
-                                    case GameDataType.ModInfo:
-                                    case GameDataType.ExactGameInfo:
-                                    case GameDataType.SettingValue:
-                                    case GameDataType.CompleteInfoCommand:
-                                    case GameDataType.ModUrl:
-                                    case GameDataType.CustomInfoTemplate:
-                                        writer.Write((string?)gameData ?? string.Empty);
-                                        break;
-
-                                    case GameDataType.SetCommandAutoCompleteEntries:
-                                    case GameDataType.InvokeCommandAutoCompleteEntries:
-                                        writer.WriteObject((CommandAutoCompleteEntry[]?)gameData ?? []);
-                                        break;
-
-                                    case GameDataType.RawInfo:
-                                        writer.WriteObject(gameData);
-                                        break;
-
-                                    case GameDataType.GameState:
-                                        writer.WriteObject((GameState?)gameData);
-                                        break;
+                                var meta = Command.GetMeta(commandName);
+                                if (meta == null) {
+                                    // Fallback to the default implementation
+                                    gameData = commandArgs[..^1].Aggregate(17,
+                                        (current, commandArg) => 31 * current + 17 * commandArg.GetStableHashCode());
+                                    break;
                                 }
 
-                                LogVerbose($"Sent message GameDataResponse: {gameDataType} = '{gameData}'");
-                            });
+                                gameData = meta.GetHash(commandArgs, filePath, fileLine);
+                                break;
+                            case GameDataType.LevelInfo:
+                                gameData = new LevelInfo {
+                                    ModUrl = GameData.GetModUrl(),
+                                    WakeupTime = GameData.GetWakeupTime(),
+                                };
+                                break;*/
+
+                            default:
+                                gameData = null;
+                                break;
+                        }
+
+                        QueueMessage(MessageID.GameDataResponse, writer => {
+                            writer.Write((byte)gameDataType);
+
+                            switch (gameDataType) {
+                                case GameDataType.ConsoleCommand:
+                                case GameDataType.ModInfo:
+                                case GameDataType.ExactGameInfo:
+                                case GameDataType.SettingValue:
+                                case GameDataType.CompleteInfoCommand:
+                                case GameDataType.ModUrl:
+                                case GameDataType.CustomInfoTemplate:
+                                    writer.Write((string?)gameData ?? string.Empty);
+                                    break;
+
+                                case GameDataType.RawInfo:
+                                    writer.WriteObject(gameData);
+                                    break;
+
+                                case GameDataType.GameState:
+                                    writer.WriteObject((GameState?)gameData);
+                                    break;
+
+                                case GameDataType.CommandHash:
+                                    writer.Write((int)gameData!);
+                                    break;
+
+                                case GameDataType.LevelInfo:
+                                    writer.WriteObject((LevelInfo)gameData!);
+                                    break;
+                            }
+
+                            LogVerbose($"Sent message GameDataResponse: {gameDataType} = '{gameData}'");
+                        });
                     } catch (Exception ex) {
-                        Console.WriteLine(ex);
+                        Log.Error($"Failed to get game data for '{gameDataType}': {ex}");
                     }
                 });
                 break;
+
+
+            /*case MessageID.RequestCommandAutoComplete:
+                var hash = reader.ReadInt32();
+                var commandName = reader.ReadString();
+                var commandArgs = reader.ReadObject<string[]>();
+                var filePath = reader.ReadString();
+                var fileLine = reader.ReadInt32();
+                LogVerbose(
+                    $"Received message RequestCommandAutoComplete: '{commandName}' '{string.Join(' ', commandArgs)}' file '{filePath}' line {fileLine} ({hash})");
+
+                var meta = Command.GetMeta(commandName);
+                if (meta == null) {
+                    QueueMessage(MessageID.CommandAutoComplete, writer => {
+                        writer.Write(hash);
+                        writer.WriteObject(Array.Empty<CommandAutoCompleteEntry>());
+                        writer.Write( donetrue);
+                    });
+                    LogVerbose($"Sent message CommandAutoComplete: 0 [Command meta not found] ({hash})");
+                    return;
+                }
+
+                List<CommandAutoCompleteEntry> entries = [];
+                var done = false;
+
+                // Collect entries
+                Task.Run(() => {
+                    using var enumerator = meta.GetAutoCompleteEntries(commandArgs, filePath, fileLine);
+                    while (Connected) {
+                        try {
+                            if (!enumerator.MoveNext()) break;
+                        } catch (Exception ex) {
+                            ex.LogException("Failed to collect auto-complete entries");
+                            break;
+                        }
+
+                        lock (entries) {
+                            entries.Add(enumerator.Current);
+                        }
+                    }
+
+                    done = true;
+                });
+                // Send entries
+                Task.Run(async () => {
+                    CommandAutoCompleteEntry[] entriesToWrite;
+
+                    var timeout = TimeSpan.FromSeconds(5.0f);
+                    var lastWrite = DateTime.UtcNow;
+
+                    while (Connected && !done) {
+                        // Individual entries shouldn't take too long to compute
+                        var now = DateTime.UtcNow;
+                        if (now - lastWrite > timeout) {
+                            QueueMessage(MessageID.CommandAutoComplete, writer => {
+                                writer.Write(hash);
+                                writer.WriteObject(Array.Empty<CommandAutoCompleteEntry>());
+                                writer.Write( true);
+                            });
+                            LogVerbose($"Sent message CommandAutoComplete: 0 [timeout] ({hash})");
+                            break;
+                        }
+
+                        lock (entries) {
+                            if (entries.Count == 0) continue;
+
+                            entriesToWrite = entries.ToArray();
+                            entries.Clear();
+                            lastWrite = now;
+                        }
+
+                        QueueMessage(MessageID.CommandAutoComplete, writer => {
+                            writer.Write(hash);
+                            writer.WriteObject(entriesToWrite);
+                            writer.Write( false);
+                        });
+                        LogVerbose($"Sent message CommandAutoComplete: {entriesToWrite.Length} [incremental] ({hash})");
+
+                        await Task.Delay(TimeSpan.FromSeconds(0.1f)).ConfigureAwait(false);
+                    }
+
+                    lock (entries) {
+                        entriesToWrite = entries.ToArray();
+                        entries.Clear();
+                    }
+
+                    QueueMessage(MessageID.CommandAutoComplete, writer => {
+                        writer.Write(hash);
+                        writer.WriteObject(entriesToWrite);
+                        writer.Write(true);
+                    });
+                    LogVerbose($"Sent message CommandAutoComplete: {entriesToWrite.Length} [done] ({hash})");
+                });
+                break;*/
+
+            /*case MessageID.GameSettings:
+                var settings = reader.ReadObject<GameSettings>();
+                LogVerbose("Received message GameSettings");
+
+                TasSettings.StudioShared = settings;
+                CelesteTasModule.Instance.SaveSettings();
+                break;*/
 
             default:
                 LogError($"Received unknown message ID: {messageId}");
