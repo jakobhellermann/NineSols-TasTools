@@ -9,6 +9,6 @@ public static class GlobalVariables {
 
     public static void AbortTas(string message, bool log = false, float duration = 2f) {
         ToastManager.Toast(message);
-        // Manager.DisableRunLater();
+        Manager.DisableRunLater();
     }
 }

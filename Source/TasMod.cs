@@ -61,6 +61,7 @@ public class TasMod : BaseUnityPlugin {
     }
 
     private void PostLateUpdate() {
+        // ToastManager.Toast(Time.deltaTime);
         Manager.PostFrameUpdate();
         // if (Manager.Running && !Manager.SkipFrame) ToastManager.Toast("-- FRAME END --");
     }
@@ -74,6 +75,9 @@ public class TasMod : BaseUnityPlugin {
         AttributeUtils.Invoke<UnloadAttribute>();
         Manager.DisableRun();
         harmony.UnpatchSelf();
+
+        CommunicationWrapper.SendReset();
+        CommunicationWrapper.Stop();
     }
 }
 

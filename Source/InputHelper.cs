@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using HarmonyLib;
 using InControl;
+using NineSolsAPI;
 using StudioCommunication;
 using UnityEngine;
 
@@ -56,7 +57,9 @@ public static class InputHelper {
         InputManager.ClearInputState();
         // InputManagerUpdateInternal.Invoke();
 
+        // Application.targetFrameRate = CaptureFramerate; enable this to set framerate properly
         Time.captureFramerate = CaptureFramerate;
+        ToastManager.Toast("framerate: " + Application.targetFrameRate);
     }
 
     [DisableRun]
@@ -84,10 +87,12 @@ public static class InputHelper {
 
     private static Dictionary<Actions, Key> actionKeyMap = new() {
         { Actions.Jump, Key.Space },
+        { Actions.Dash, Key.LeftShift },
         { Actions.Left, Key.A },
         { Actions.Right, Key.D },
         { Actions.Up, Key.W },
         { Actions.Down, Key.D },
+        { Actions.Grab, Key.K },
     };
 
     [HarmonyPatch(typeof(UnityKeyboardProvider), nameof(UnityKeyboardProvider.GetKeyIsPressed))]

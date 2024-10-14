@@ -39,6 +39,12 @@ public static class CommunicationWrapper {
         comm = null;
     }
 
+    public static void SendReset() {
+        if (!Connected) return;
+
+        comm.WriteReset();
+    }
+
     public static void ChangeStatus() {
         if (TasSettings.AttemptConnectStudio && comm == null)
             Start();
