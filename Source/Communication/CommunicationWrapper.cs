@@ -2,17 +2,23 @@ using System.Collections.Generic;
 using System.Linq;
 using StudioCommunication;
 using TAS.EverestInterop;
+using TAS.Input;
 
 namespace TAS.Communication;
 
 public static class CommunicationWrapper {
     public static bool Connected => comm is { Connected: true };
-    private static CommunicationAdapterCeleste? comm;
+    private static CommunicationAdapterCeleste comm;
 
+    /*[Load]
+    private static void Load() {
+        Everest.Events.Celeste.OnExiting += Stop;
+    }
     [Unload]
     private static void Unload() {
+        Everest.Events.Celeste.OnExiting -= Stop;
         Stop();
-    }
+    }*/
 
     public static void Start() {
         if (comm != null) {
@@ -29,8 +35,6 @@ public static class CommunicationWrapper {
             return;
         }
 
-        SendReset();
-
         comm.Dispose();
         comm = null;
     }
@@ -42,12 +46,6 @@ public static class CommunicationWrapper {
     }
 
     #region Actions
-
-    public static void SendReset() {
-        if (!Connected) return;
-
-        comm.WriteReset();
-    }
 
     public static void SendState(StudioState state) {
         if (!Connected) return;
@@ -65,11 +63,7 @@ public static class CommunicationWrapper {
         if (!Connected) return;
 
         var nativeBindings =
-            Hotkeys.KeysInteractWithStudio.ToDictionary(pair => (int)pair.Key,
-                pair => {
-                    var keys = pair.Value.Select(key => (int)UnityToXna.MapKeyCodeToXna(key)).ToList();
-                    return keys;
-                });
+            Hotkeys.KeysInteractWithStudio.ToDictionary(pair => (int)pair.Key, pair => pair.Value.Cast<int>().ToList());
         comm.WriteCurrentBindings(nativeBindings);
     }
 
@@ -77,6 +71,18 @@ public static class CommunicationWrapper {
         if (!Connected) return;
 
         comm.WriteRecordingFailed(reason);
+    }
+
+    public static void SendSettings(GameSettings settings) {
+        if (!Connected) return;
+
+        comm.WriteSettings(settings);
+    }
+
+    public static void SendCommandList() {
+        if (!Connected) return;
+
+        comm.WriteCommandList(Command.GetCommandList());
     }
 
     #endregion

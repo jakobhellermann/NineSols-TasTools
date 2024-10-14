@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading;
+using System.Linq;
 using System.Threading.Tasks;
 using NineSolsAPI;
 using StudioCommunication;
@@ -20,10 +20,9 @@ public sealed class CommunicationAdapterCeleste() : CommunicationAdapterBase(Loc
     protected override void OnConnectionChanged() {
         ToastManager.Toast($"On connection changed: {Connected}");
         if (Connected) {
-            // Stall until input initialized to avoid sending invalid hotkey data
-            while (Hotkeys.KeysDict == null) Thread.Sleep(UpdateRate);
-
             CommunicationWrapper.SendCurrentBindings();
+            // CommunicationWrapper.SendSettings(TasSettings.StudioShared);
+            CommunicationWrapper.SendCommandList();
         }
     }
 
@@ -112,7 +111,7 @@ public sealed class CommunicationAdapterCeleste() : CommunicationAdapterBase(Loc
                             case GameDataType.GameState:
                                 gameData = GameData.GetGameState();
                                 break;*/
-                            /*case GameDataType.CommandHash:
+                            case GameDataType.CommandHash:
                                 var (commandName, commandArgs, filePath, fileLine) =
                                     ((string, string[], string, int))arg!;
 
@@ -126,7 +125,7 @@ public sealed class CommunicationAdapterCeleste() : CommunicationAdapterBase(Loc
 
                                 gameData = meta.GetHash(commandArgs, filePath, fileLine);
                                 break;
-                            case GameDataType.LevelInfo:
+                            /*case GameDataType.LevelInfo:
                                 gameData = new LevelInfo {
                                     ModUrl = GameData.GetModUrl(),
                                     WakeupTime = GameData.GetWakeupTime(),
@@ -178,7 +177,7 @@ public sealed class CommunicationAdapterCeleste() : CommunicationAdapterBase(Loc
                 break;
 
 
-            /*case MessageID.RequestCommandAutoComplete:
+            case MessageID.RequestCommandAutoComplete:
                 var hash = reader.ReadInt32();
                 var commandName = reader.ReadString();
                 var commandArgs = reader.ReadObject<string[]>();
@@ -192,7 +191,7 @@ public sealed class CommunicationAdapterCeleste() : CommunicationAdapterBase(Loc
                     QueueMessage(MessageID.CommandAutoComplete, writer => {
                         writer.Write(hash);
                         writer.WriteObject(Array.Empty<CommandAutoCompleteEntry>());
-                        writer.Write( donetrue);
+                        writer.Write(true);
                     });
                     LogVerbose($"Sent message CommandAutoComplete: 0 [Command meta not found] ({hash})");
                     return;
@@ -208,7 +207,7 @@ public sealed class CommunicationAdapterCeleste() : CommunicationAdapterBase(Loc
                         try {
                             if (!enumerator.MoveNext()) break;
                         } catch (Exception ex) {
-                            ex.LogException("Failed to collect auto-complete entries");
+                            Log.Error("Failed to collect auto-complete entries");
                             break;
                         }
 
@@ -233,7 +232,7 @@ public sealed class CommunicationAdapterCeleste() : CommunicationAdapterBase(Loc
                             QueueMessage(MessageID.CommandAutoComplete, writer => {
                                 writer.Write(hash);
                                 writer.WriteObject(Array.Empty<CommandAutoCompleteEntry>());
-                                writer.Write( true);
+                                writer.Write(true);
                             });
                             LogVerbose($"Sent message CommandAutoComplete: 0 [timeout] ({hash})");
                             break;
@@ -250,7 +249,7 @@ public sealed class CommunicationAdapterCeleste() : CommunicationAdapterBase(Loc
                         QueueMessage(MessageID.CommandAutoComplete, writer => {
                             writer.Write(hash);
                             writer.WriteObject(entriesToWrite);
-                            writer.Write( false);
+                            writer.Write(false);
                         });
                         LogVerbose($"Sent message CommandAutoComplete: {entriesToWrite.Length} [incremental] ({hash})");
 
@@ -269,7 +268,7 @@ public sealed class CommunicationAdapterCeleste() : CommunicationAdapterBase(Loc
                     });
                     LogVerbose($"Sent message CommandAutoComplete: {entriesToWrite.Length} [done] ({hash})");
                 });
-                break;*/
+                break;
 
             /*case MessageID.GameSettings:
                 var settings = reader.ReadObject<GameSettings>();
@@ -309,6 +308,16 @@ public sealed class CommunicationAdapterCeleste() : CommunicationAdapterBase(Loc
     public void WriteRecordingFailed(RecordingFailedReason reason) {
         QueueMessage(MessageID.RecordingFailed, writer => writer.Write((byte)reason));
         LogVerbose($"Sent message RecordingFailed: {reason}");
+    }
+
+    public void WriteSettings(GameSettings settings) {
+        QueueMessage(MessageID.GameSettings, writer => writer.WriteObject(settings));
+        LogVerbose("Sent message GameSettings");
+    }
+
+    public void WriteCommandList(CommandInfo[] commands) {
+        QueueMessage(MessageID.CommandList, writer => writer.WriteObject(commands));
+        LogVerbose("Sent message CommandList");
     }
 
     private void ProcessRecordTAS(string fileName) {

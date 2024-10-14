@@ -6,7 +6,6 @@ using StudioCommunication;
 using TAS.Communication;
 using TAS.EverestInterop;
 using TAS.Input;
-using TAS.Input.Commands;
 using TAS.Utils;
 using UnityEngine;
 
@@ -209,7 +208,7 @@ public static class Manager {
     }
 
     public static void EnableRun() {
-        if (GameCore.Instance.gameLevel is null) {
+        if (!GameCore.IsAvailable() || GameCore.Instance.gameLevel is null) {
             Running = false;
             LastStates = States.None;
             States = States.None;

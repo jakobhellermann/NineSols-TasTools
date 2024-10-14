@@ -1,4 +1,6 @@
-﻿namespace TAS;
+﻿using System;
+
+namespace TAS;
 
 public class GameInfo {
     public static string StudioInfo = "";
@@ -39,5 +41,11 @@ public class GameInfo {
         text += $"{core.currentCutScene}";
 
         return text;
+    }
+
+    public static string FormatTime(long time) {
+        var timeSpan = TimeSpan.FromTicks(time);
+        // return $"{timeSpan.ShortGameplayFormat()}({ConvertMicroSecondToFrames(time)})";
+        return "todo time format";
     }
 }

@@ -5,6 +5,7 @@
         <TargetFramework>netstandard2.1</TargetFramework>
         <Version>1.0.0</Version>
         <LangVersion>latest</LangVersion>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <Nullable>enable</Nullable>
         <PublishRelease>true</PublishRelease>
         <NoWarn>MSB3277</NoWarn>
@@ -52,6 +53,8 @@
         <PackageReference Include="NineSolsAPI" Version="0.4.0" />
 
         <ProjectReference Include="$(StudioCommunication)/StudioCommunication.csproj" />
+
+        <!--        <PackageReference Include="MemoryPack" Version="1.21.3" />-->
     </ItemGroup>
 
     <Target Name="CopyMod" AfterTargets="PostBuildEvent" Condition="'$(CopyDir)' != ''">
@@ -60,8 +63,8 @@
         <Copy SourceFiles="$(TargetDir)$(TargetName).pdb" DestinationFolder="$(CopyDir)" SkipUnchangedFiles="true" />
     </Target>
 
-    <Target Name="PackageMod" AfterTargets="Publish">
-        <Copy SourceFiles="$(TargetPath)" DestinationFolder="../thunderstore/build/dll" SkipUnchangedFiles="true" />
-        <Exec Command="tcli build --config-path ../thunderstore/thunderstore.toml" />
-    </Target>
+    <!--    <Target Name="PackageMod" AfterTargets="Publish">-->
+    <!--        <Copy SourceFiles="$(TargetPath)" DestinationFolder="../thunderstore/build/dll" SkipUnchangedFiles="true" />-->
+    <!--        <Exec Command="tcli build &#45;&#45;config-path ../thunderstore/thunderstore.toml" />-->
+    <!--    </Target>-->
 </Project>

@@ -11,7 +11,6 @@ using StudioCommunication;
 using TAS.EverestInterop;
 using TAS.Input.Commands;
 using TAS.Utils;
-using Command = TAS.Input.Commands.Command;
 
 namespace TAS.Input;
 
