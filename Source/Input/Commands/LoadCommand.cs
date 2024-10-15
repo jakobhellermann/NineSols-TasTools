@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using NineSolsAPI;
 using StudioCommunication;
 using UnityEngine;
 
@@ -56,6 +57,7 @@ public static class LoadCommand {
         gameCore.ResetLevel();
 
         if (Player.i is not { } player) return;
+        player.transform.position = player.transform.position with { x = x, y = y };
 
         player.ChangeState(PlayerStateType.Normal);
         player.animator.Rebind();
@@ -64,13 +66,14 @@ public static class LoadCommand {
         player.AnimationVelocity = Vector3.zero;
         player.Facing = Facings.Right;
         player.jumpState = Player.PlayerJumpState.None;
-
+        player.varJumpSpeed = 0;
+        player.GroundCheck();
+        Physics2D.SyncTransforms();
+        ToastManager.Toast($"load: {player.onGround} ");
 
         // CameraManager.Instance.ResetCamera2DDockerToPlayer();
         // CameraManager.Instance.camera2D.CenterOnTargets();
         // CameraManager.Instance.dummyOffset = Vector2.SmoothDamp(
         // SingletonBehaviour<CameraManager>.Instance.dummyOffset, direction, ref this.currentV, 0.25f);
-
-        player.transform.position = player.transform.position with { x = x, y = y };
     }
 }
