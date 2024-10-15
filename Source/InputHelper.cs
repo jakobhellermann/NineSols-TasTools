@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using HarmonyLib;
 using InControl;
+using NineSolsAPI;
 using StudioCommunication;
 using UnityEngine;
 
@@ -51,18 +52,27 @@ public static class InputHelper {
     private static Action inputManagerUpdateInternal =
         AccessTools.MethodDelegate<Action>(AccessTools.Method(typeof(InputManager), "UpdateInternal"));
 
-    private const int CaptureFramerate = 60;
-    private static int? previousTargetFramerate;
+    private const int DefaultTasFramerate = 60;
 
     public static void UnlockTargetFramerate() {
         Application.targetFrameRate = 0;
     }
 
     public static void LockTargetFramerate() {
-        if (previousTargetFramerate is { } framerate)
-            Application.targetFrameRate = framerate;
+        Application.targetFrameRate = Time.captureFramerate;
     }
 
+
+    public static void SetFramerate(int framerate) {
+        if (Application.targetFrameRate == Time.captureFramerate) Application.targetFrameRate = framerate;
+
+        Time.captureFramerate = framerate;
+
+        ToastManager.Toast(Application.targetFrameRate);
+        ToastManager.Toast(Time.captureFramerate);
+    }
+
+    private static int? previousTargetFramerate;
 
     [EnableRun]
     private static void EnableRun() {
@@ -70,8 +80,7 @@ public static class InputHelper {
         InputManager.Enabled = true;
         InputManager.ClearInputState();
 
-
-        Time.captureFramerate = CaptureFramerate;
+        SetFramerate(DefaultTasFramerate);
 
         if (previousTargetFramerate == null) {
             previousTargetFramerate = Application.targetFrameRate;
