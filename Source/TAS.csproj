@@ -20,10 +20,6 @@
         <ProfileDir Condition="'$(OS)' != 'Windows_NT'">$(HOME)/.config/r2modmanPlus-local/NineSols/profiles/Default</ProfileDir>
         <!-- After building, copy the dll to this folder. Useful for hot-reloading: https://github.com/BepInEx/BepInEx.Debug/blob/master/README.md#scriptengine -->
         <CopyDir>$(ProfileDir)/BepInEx/scripts</CopyDir>
-
-
-        <StudioCommunication Condition="'$(OS)' == 'Windows_NT'">C:\Users\Jakob\Documents\dev\celeste\StudioV3\StudioCommunication</StudioCommunication>
-        <StudioCommunication Condition="'$(OS)' != 'Windows_NT'">/home/jakob/dev/celeste/celestetas/StudioCommunication</StudioCommunication>
     </PropertyGroup>
 
     <ItemGroup>
@@ -52,9 +48,7 @@
 
         <PackageReference Include="NineSolsAPI" Version="0.4.0" />
 
-        <ProjectReference Include="$(StudioCommunication)/StudioCommunication.csproj" />
-
-        <!--        <PackageReference Include="MemoryPack" Version="1.21.3" />-->
+        <ProjectReference Include="../CelesteTAS/StudioCommunication/StudioCommunication.csproj" />
     </ItemGroup>
 
     <Target Name="CopyMod" AfterTargets="PostBuildEvent" Condition="'$(CopyDir)' != ''">
@@ -63,8 +57,10 @@
         <Copy SourceFiles="$(TargetDir)$(TargetName).pdb" DestinationFolder="$(CopyDir)" SkipUnchangedFiles="true" />
     </Target>
 
-    <!--    <Target Name="PackageMod" AfterTargets="Publish">-->
-    <!--        <Copy SourceFiles="$(TargetPath)" DestinationFolder="../thunderstore/build/dll" SkipUnchangedFiles="true" />-->
-    <!--        <Exec Command="tcli build &#45;&#45;config-path ../thunderstore/thunderstore.toml" />-->
-    <!--    </Target>-->
+    <Target Name="PackageMod" AfterTargets="Publish">
+        <Copy SourceFiles="$(TargetPath)" DestinationFolder="../thunderstore/build/dll" SkipUnchangedFiles="true" />
+        <Copy SourceFiles="$(TargetDir)publish/MemoryPack.Core.dll" DestinationFolder="../thunderstore/build/dll" SkipUnchangedFiles="true" />
+        <Copy SourceFiles="$(TargetDir)publish/StudioCommunication.dll" DestinationFolder="../thunderstore/build/dll" SkipUnchangedFiles="true" />
+        <Exec Command="tcli build --config-path ../thunderstore/thunderstore.toml" />
+    </Target>
 </Project>

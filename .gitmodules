@@ -1,0 +1,4 @@
+[submodule "CelesteTAS-EverestInterop"]
+	path = CelesteTAS
+	url = https://github.com/jakobhellermann/CelesteTAS-EverestInterop
+	branch = ninesols-compat
