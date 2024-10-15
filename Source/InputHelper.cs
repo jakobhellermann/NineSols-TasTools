@@ -119,10 +119,10 @@ public static class InputHelper {
     private static Dictionary<Actions, Key> actionKeyMap = new() {
         { Actions.Jump, Key.Space },
         { Actions.Dash, Key.LeftShift },
+        { Actions.Up, Key.W },
+        { Actions.Down, Key.S },
         { Actions.Left, Key.A },
         { Actions.Right, Key.D },
-        { Actions.Up, Key.W },
-        { Actions.Down, Key.D },
         { Actions.Grab, Key.K },
     };
 
