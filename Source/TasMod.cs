@@ -73,7 +73,7 @@ public class TasMod : BaseUnityPlugin {
 
     private void OnDestroy() {
         AttributeUtils.Invoke<UnloadAttribute>();
-        Manager.DisableRun();
+        if (Manager.Running) Manager.DisableRun();
         harmony.UnpatchSelf();
 
         CommunicationWrapper.SendReset();

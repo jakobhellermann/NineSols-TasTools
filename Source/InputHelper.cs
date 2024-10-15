@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using HarmonyLib;
 using InControl;
-using NineSolsAPI;
 using StudioCommunication;
 using UnityEngine;
 
@@ -10,6 +9,8 @@ namespace TAS;
 
 [HarmonyPatch]
 public static class InputHelper {
+    #region Actual TimeScale Patches
+
     private static float actualTimeScale = Time.timeScale;
 
     [HarmonyPatch(typeof(RCGTime), nameof(RCGTime.timeScale), MethodType.Getter)]
@@ -36,6 +37,8 @@ public static class InputHelper {
         return false;
     }
 
+    #endregion
+
     public static void WriteActualTime() {
         Time.timeScale = actualTimeScale;
     }
@@ -45,30 +48,49 @@ public static class InputHelper {
     }
 
 
-    private const int CaptureFramerate = 60;
-
-    private static Action InputManagerUpdateInternal =
+    private static Action inputManagerUpdateInternal =
         AccessTools.MethodDelegate<Action>(AccessTools.Method(typeof(InputManager), "UpdateInternal"));
+
+    private const int CaptureFramerate = 60;
+    private static int? previousTargetFramerate;
+
+    public static void UnlockTargetFramerate() {
+        Application.targetFrameRate = 0;
+    }
+
+    public static void LockTargetFramerate() {
+        if (previousTargetFramerate is { } framerate)
+            Application.targetFrameRate = framerate;
+    }
+
 
     [EnableRun]
     private static void EnableRun() {
         InputManager.SuspendInBackground = false;
         InputManager.Enabled = true;
         InputManager.ClearInputState();
-        // InputManagerUpdateInternal.Invoke();
 
-        // Application.targetFrameRate = CaptureFramerate; enable this to set framerate properly
+
         Time.captureFramerate = CaptureFramerate;
-        ToastManager.Toast("framerate: " + Application.targetFrameRate);
+
+        if (previousTargetFramerate == null) {
+            previousTargetFramerate = Application.targetFrameRate;
+            UnlockTargetFramerate();
+        }
     }
 
     [DisableRun]
     private static void DisableRun() {
         InputManager.SuspendInBackground = true;
         InputManager.ClearInputState();
-        InputManagerUpdateInternal.Invoke();
+        inputManagerUpdateInternal.Invoke();
 
         Time.captureFramerate = 0;
+
+        if (previousTargetFramerate is { } framerate) {
+            Application.targetFrameRate = framerate;
+            previousTargetFramerate = null;
+        }
     }
 
 

@@ -83,6 +83,8 @@ public static class Manager {
                 Controller.NextCommentFastForward = null;
                 NextStates |= States.FrameStep;
                 FrameLoops = 1;
+
+                InputHelper.LockTargetFramerate();
             }
 
             if (!canPlayback)
@@ -164,7 +166,7 @@ public static class Manager {
                 States.Set(States.FrameStep);
                 NextStates.Unset(States.FrameStep);
             } else {
-                States.Set(States.FrameStep);
+                States.Unset(States.FrameStep);
                 NextStates.Unset(States.FrameStep);
             }
         } else if (LastStates.Has(States.FrameStep) && States.Has(States.FrameStep) &&
@@ -178,12 +180,11 @@ public static class Manager {
     }
 
     private static void CheckToEnable() {
-        // Do not use Hotkeys.Restart.Pressed unless the fast forwarding optimization in Hotkeys.Update() is removed
-        /*if (!Savestates.SpeedrunToolInstalled && Hotkeys.Restart.Released) {
-            DisableRun();
+        if (Hotkeys.Restart.Released) {
+            if (States.Has(States.Enable)) DisableRun();
             EnableRun();
             return;
-        }*/
+        }
 
         if (Hotkeys.StartStop.Check) {
             if (States.Has(States.Enable))
@@ -216,11 +217,11 @@ public static class Manager {
             return;
         }
 
+        AttributeUtils.Invoke<EnableRunAttribute>();
         Running = true;
         States |= States.Enable;
         States &= ~States.FrameStep;
         NextStates &= ~States.Enable;
-        AttributeUtils.Invoke<EnableRunAttribute>();
         Controller.RefreshInputs(true);
     }
 
