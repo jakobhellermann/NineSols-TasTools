@@ -261,7 +261,6 @@ public static class Manager {
             LevelName = GameInfo.LevelName,
             ChapterTime = GameInfo.ChapterTime,
             ShowSubpixelIndicator = TasSettings.InfoSubpixelIndicator && remainder is not null,
-            SubpixelRemainder = (remainder?.x ?? 0, remainder?.y ?? 0),
         };
         CommunicationWrapper.SendState(state);
     }
