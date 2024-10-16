@@ -245,7 +245,9 @@ public static class Manager {
     public static void SendStateToStudio() {
         if (UltraFastForwarding && Engine.FrameCounter % 23 > 0) return;
 
-        var remainder = Player.i?.movementCounter;
+        var playerPosition = Player.i?.transform.position;
+        var playerSpeed = Player.i?.transform.position;
+        var movementRemainder = Player.i?.movementCounter;
 
         var previous = Controller.Previous;
         StudioState state = new() {
@@ -253,6 +255,7 @@ public static class Manager {
             CurrentLineSuffix =
                 $"{Controller.CurrentFrameInInput + (previous?.FrameOffset ?? 0)}{previous?.RepeatString ?? ""}",
             CurrentFrameInTas = Controller.CurrentFrameInTas,
+            CurrentFrameInInput =  Controller.CurrentFrameInInput,
             TotalFrames = Controller.Inputs.Count,
             // SaveStateLine = Savestates.StudioHighlightLine,
             SaveStateLine = -1,
@@ -260,7 +263,10 @@ public static class Manager {
             GameInfo = GameInfo.StudioInfo,
             LevelName = GameInfo.LevelName,
             ChapterTime = GameInfo.ChapterTime,
-            ShowSubpixelIndicator = TasSettings.InfoSubpixelIndicator && remainder is not null,
+            ShowSubpixelIndicator = TasSettings.InfoSubpixelIndicator && movementRemainder is not null,
+            PlayerPosition = playerPosition.HasValue ? (playerPosition.Value.x, playerPosition.Value.y) : (0,0),
+            PlayerSpeed = playerSpeed.HasValue ? (playerSpeed.Value.x, playerSpeed.Value.y) : (0,0),
+            PlayerPositionRemainder = movementRemainder.HasValue ? (movementRemainder.Value.x, movementRemainder.Value.y) : (0,0),
         };
         CommunicationWrapper.SendState(state);
     }

@@ -32,7 +32,7 @@ public class CelesteTasSettings(ConfigFile config) {
     public float SlowForwardSpeed => 0.1f;
 
 
-    public bool InfoSubpixelIndicator => true;
+    public bool InfoSubpixelIndicator => false;
 
 
     /*

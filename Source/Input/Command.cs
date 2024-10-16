@@ -55,7 +55,6 @@ public class TasCommandAttribute(string name) : Attribute {
 
 #if DEBUG
     internal void Validate() {
-        Log.Info($"Validating command '{Name}'...");
         var executeMethod = typeof(TasCommandAttribute).GetMethod(nameof(Execute))!;
         Debug.Assert(m_Execute != null);
         Debug.Assert(m_Execute.GetParameters().Length == executeMethod.GetParameters().Length);

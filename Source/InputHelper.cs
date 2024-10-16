@@ -74,9 +74,6 @@ public static class InputHelper {
         if (Application.targetFrameRate == Time.captureFramerate) Application.targetFrameRate = framerate;
 
         Time.captureFramerate = framerate;
-
-        ToastManager.Toast(Application.targetFrameRate);
-        ToastManager.Toast(Time.captureFramerate);
     }
 
     private static int? previousTargetFramerate;
