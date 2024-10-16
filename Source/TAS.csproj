@@ -61,6 +61,7 @@
         <Copy SourceFiles="$(TargetPath)" DestinationFolder="../thunderstore/build/dll" SkipUnchangedFiles="true" />
         <Copy SourceFiles="$(TargetDir)publish/MemoryPack.Core.dll" DestinationFolder="../thunderstore/build/dll" SkipUnchangedFiles="true" />
         <Copy SourceFiles="$(TargetDir)publish/StudioCommunication.dll" DestinationFolder="../thunderstore/build/dll" SkipUnchangedFiles="true" />
+        <Copy SourceFiles="$(TargetDir)publish/System.Collections.Immutable.dll" DestinationFolder="../thunderstore/build/dll" SkipUnchangedFiles="true" />
         <Exec Command="tcli build --config-path ../thunderstore/thunderstore.toml" />
     </Target>
 </Project>
