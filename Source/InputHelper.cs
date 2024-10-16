@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using HarmonyLib;
 using InControl;
 using NineSolsAPI;
@@ -32,7 +33,13 @@ public static class InputHelper {
     [HarmonyPatch(typeof(RCGTime), nameof(RCGTime.GlobalSimulationSpeed), MethodType.Setter)]
     [HarmonyPrefix]
     public static bool GlobalSimSpeedSet(float value) {
-        RCGTime._globalSimulationSpeed = value;
+        var field = typeof(RCGTime).GetField("_globalSimulationSpeed", BindingFlags.NonPublic | BindingFlags.Static);
+        if (field is null) {
+            Log.Error("Could not set _globalSimulationSpeed: field does not exist");
+            return true;
+        }
+
+        field.SetValue(null, value);
         // Time.timeScale = RCGTime._globalSimulationSpeed * actualTimeScale;
 
         return false;
