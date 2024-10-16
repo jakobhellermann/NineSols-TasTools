@@ -7,7 +7,7 @@ public class CelesteTasSettings(ConfigFile config) {
     public const int MaxDecimals = 12;
 
 
-    public ConfigEntry<KeyboardShortcut> KeyStartStop =
+    /*public ConfigEntry<KeyboardShortcut> KeyStartStop =
         config.Bind("Shortcuts", "StartStop", new KeyboardShortcut(), "");
 
     public ConfigEntry<KeyboardShortcut> KeyRestart = config.Bind("Shortcuts", "Restart", new KeyboardShortcut(), "");
@@ -24,7 +24,7 @@ public class CelesteTasSettings(ConfigFile config) {
     public ConfigEntry<KeyboardShortcut> KeySlowForward =
         config.Bind("Shortcuts", "Slow Forward", new KeyboardShortcut(), "");
 
-    public ConfigEntry<KeyboardShortcut> KeyPause = config.Bind("Shortcuts", "Pause", new KeyboardShortcut(), "");
+    public ConfigEntry<KeyboardShortcut> KeyPause = config.Bind("Shortcuts", "Pause", new KeyboardShortcut(), "");*/
 
     public bool Enabled { get; set; } = true;
 

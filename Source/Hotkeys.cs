@@ -70,15 +70,23 @@ public static class Hotkeys {
 
     private static void InputInitialize() {
         KeysDict.Clear();
-
-        KeysDict[HotkeyID.Start] = StartStop = BindingToHotkey(TasSettings.KeyStartStop.Value);
+        
+        KeysDict[HotkeyID.Start] = StartStop = new Hotkey([], [], false, false);
+        KeysDict[HotkeyID.Restart] = Restart = new Hotkey([], [], false, false);
+        KeysDict[HotkeyID.FastForward] = FastForward = new Hotkey([], [], false, true);
+        KeysDict[HotkeyID.FastForwardComment] = FastForwardComment = new Hotkey([], [], false, false);
+        KeysDict[HotkeyID.FrameAdvance] = FrameAdvance = new Hotkey([], [], false, false);
+        KeysDict[HotkeyID.SlowForward] = SlowForward = new Hotkey([], [], false, true);
+        KeysDict[HotkeyID.Pause] = PauseResume = new Hotkey([], [], false, false);
+       
+        /*KeysDict[HotkeyID.Start] = StartStop = BindingToHotkey(TasSettings.KeyStartStop.Value);
         KeysDict[HotkeyID.Restart] = Restart = BindingToHotkey(TasSettings.KeyRestart.Value);
         KeysDict[HotkeyID.FastForward] = FastForward = BindingToHotkey(TasSettings.KeyFastForward.Value, true);
         KeysDict[HotkeyID.FastForwardComment] =
             FastForwardComment = BindingToHotkey(TasSettings.KeyFastForwardComment.Value);
         KeysDict[HotkeyID.FrameAdvance] = FrameAdvance = BindingToHotkey(TasSettings.KeyFrameAdvance.Value);
         KeysDict[HotkeyID.SlowForward] = SlowForward = BindingToHotkey(TasSettings.KeySlowForward.Value, true);
-        KeysDict[HotkeyID.Pause] = PauseResume = BindingToHotkey(TasSettings.KeyPause.Value);
+        KeysDict[HotkeyID.Pause] = PauseResume = BindingToHotkey(TasSettings.KeyPause.Value);*/
 
         /*KeysDict[HotkeyID.Hitboxes] = Hitboxes = BindingToHotkey(TasSettings.KeyHitboxes);
         KeysDict[HotkeyID.TriggerHitboxes] = TriggerHitboxes = BindingToHotkey(TasSettings.KeyTriggerHitboxes);
@@ -103,7 +111,7 @@ public static class Hotkeys {
     }
 
 
-    private static Hotkey BindingToHotkey(KeyboardShortcut binding, bool held = false) {
+    /*private static Hotkey BindingToHotkey(KeyboardShortcut binding, bool held = false) {
         var keys = new[] { binding.MainKey }.Concat(binding.Modifiers).ToList();
 
         var buttons = keys.Where(key => key is >= KeyCode.Mouse0 and <= KeyCode.Mouse6)
@@ -111,7 +119,7 @@ public static class Hotkeys {
             .ToList();
 
         return new Hotkey(keys, buttons, true, held);
-    }
+    }*/
 
     /*private static GamePadState GetGamePadState() {
         GamePadState currentState = MInput.GamePads[0].CurrentState;
