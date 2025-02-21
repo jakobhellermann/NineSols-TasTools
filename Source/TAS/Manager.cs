@@ -3,9 +3,12 @@ using System.Collections.Concurrent;
 using System.Linq;
 using JetBrains.Annotations;
 using NineSolsAPI;
+using StudioCommunication;
+using TAS.Communication;
 using TAS.Input;
 using TAS.UnityInterop;
 using TAS.Utils;
+using UnityEngine;
 
 namespace TAS;
 
@@ -84,7 +87,7 @@ public static class Manager {
         PlaybackSpeed = 1.0f;
 
         Controller.Stop();
-        Controller.RefreshInputs();
+        Controller.RefreshInputs(forceRefresh: true);
         AttributeUtils.Invoke<EnableRunAttribute>();
 
         // This needs to happen after EnableRun, otherwise the input state will be reset in BindingHelper.SetTasBindings
@@ -99,6 +102,11 @@ public static class Manager {
         "Stopping TAS".Log();
 
         AttributeUtils.Invoke<DisableRunAttribute>();
+
+        if (CurrState == State.Paused) {
+            DisablePause();
+        }
+        
         CurrState = NextState = State.Disabled;
         Controller.Stop();
     }
@@ -108,8 +116,27 @@ public static class Manager {
     /// Will stop the TAS on the next update cycle
     public static void DisableRunLater() => NextState = State.Disabled;
 
+    public static void EnablePause() {
+        // TODO use rcg timescale
+        Time.timeScale = 0;
+        
+        ToastManager.Toast(Player.i.Velocity);
+        ToastManager.Toast(Player.i.transform.position);
+    }
+    public static void DisablePause() {
+        Time.timeScale = 1;
+    }
+
+
     /// Updates the TAS itself
     public static void Update() {
+        if (CurrState != State.Paused && NextState == State.Paused) {
+            EnablePause();
+        }
+        if (CurrState == State.Paused && NextState != State.Paused) {
+            DisablePause();
+        }
+        
         if (!Running && NextState == State.Running) {
             EnableRun();
         }
@@ -182,7 +209,7 @@ public static class Manager {
         // Savestates.UpdateMeta();
         AttributeUtils.Invoke<UpdateMetaAttribute>();
 
-        // SendStudioState();
+        SendStudioState();
 
         // Pending EnableRun/DisableRun. Prevent overwriting
         if (Running && NextState == State.Disabled || !Running && NextState != State.Disabled) {
@@ -307,7 +334,6 @@ public static class Manager {
             .All(command => !command.Is("MidwayFileTime") && !command.Is("MidwayChapterTime"));
     }
 
-    /*
     public static bool PreventSendStudioState = false; // a cursed demand of tas helper's predictor
 
     internal static void SendStudioState() {
@@ -320,15 +346,17 @@ public static class Manager {
             CurrentLineSuffix = $"{Controller.CurrentFrameInInput + (previous?.FrameOffset ?? 0)}{previous?.RepeatString ?? ""}",
             CurrentFrameInTas = Controller.CurrentFrameInTas,
             TotalFrames = Controller.Inputs.Count,
-            SaveStateLine = Savestates.StudioHighlightLine,
+            // SaveStateLine = Savestates.StudioHighlightLine,
+            SaveStateLine = 0,
             tasStates = 0,
             GameInfo = GameInfo.StudioInfo,
             LevelName = GameInfo.LevelName,
             ChapterTime = GameInfo.ChapterTime,
-            ShowSubpixelIndicator = TasSettings.InfoSubpixelIndicator && Engine.Scene is Level or Emulator,
+            // ShowSubpixelIndicator = TasSettings.InfoSubpixelIndicator && Engine.Scene is Level or Emulator,
+            ShowSubpixelIndicator = TasSettings.InfoSubpixelIndicator,
         };
 
-        if (Engine.Scene is Level level && level.GetPlayer() is { } player) {
+        /*if (Engine.Scene is Level level && level.GetPlayer() is { } player) {
             state.PlayerPosition = (player.Position.X, player.Position.Y);
             state.PlayerPositionRemainder = (player.PositionRemainder.X, player.PositionRemainder.Y);
             state.PlayerSpeed = (player.Speed.X, player.Speed.Y);
@@ -336,11 +364,12 @@ public static class Manager {
             state.PlayerPosition = (classicPlayer.x, classicPlayer.y);
             state.PlayerPositionRemainder = (classicPlayer.rem.X, classicPlayer.rem.Y);
             state.PlayerSpeed = (classicPlayer.spd.X, classicPlayer.spd.Y);
-        }
+        }*/
 
         CommunicationWrapper.SendState(state);
     }
 
+    /*
     [Monocle.Command("dump_tas", "Dumps the parsed TAS file into the console (CelesteTAS)"), UsedImplicitly]
     private static void CmdDumpTas() {
         if (Controller.NeedsReload) {

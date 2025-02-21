@@ -24,14 +24,14 @@ public static class InputHelper {
 
     [HarmonyPatch(typeof(RCGTime), nameof(RCGTime.timeScale), MethodType.Getter)]
     [HarmonyPrefix]
-    public static bool TimeScaleGet(ref float __result) {
+    private static bool TimeScaleGet(ref float __result) {
         __result = actualTimeScale;
         return false;
     }
 
     [HarmonyPatch(typeof(RCGTime), nameof(RCGTime.timeScale), MethodType.Setter)]
     [HarmonyPrefix]
-    public static bool TimeScaleSet(ref float value) {
+    private static bool TimeScaleSet(ref float value) {
         actualTimeScale = value;
         // Time.timeScale = value;
         return false;

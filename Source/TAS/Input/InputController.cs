@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using BepInEx.Logging;
 using JetBrains.Annotations;
+using NineSolsAPI;
 using StudioCommunication;
 using TAS.Input.Commands;
 using TAS.Utils;
@@ -106,7 +107,7 @@ public class InputController {
             // Preload the TAS file
             Stop();
             Clear();
-            RefreshInputs();
+            RefreshInputs(forceRefresh: true);
         }
     }
 

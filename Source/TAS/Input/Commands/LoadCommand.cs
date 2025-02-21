@@ -1,6 +1,6 @@
 using System.Collections.Generic;
-using NineSolsAPI;
 using StudioCommunication;
+using TAS.Utils;
 using UnityEngine;
 
 namespace TAS.Input.Commands;
@@ -69,6 +69,10 @@ public static class LoadCommand {
         player.varJumpSpeed = 0;
         player.GroundCheck();
         Physics2D.SyncTransforms();
+        
+        foreach(var condition in ConditionTimer.Instance.AllConditions) {
+            condition.SetFieldValue("_isFalseTimer", float.PositiveInfinity);
+        }
 
         // CameraManager.Instance.ResetCamera2DDockerToPlayer();
         // CameraManager.Instance.camera2D.CenterOnTargets();

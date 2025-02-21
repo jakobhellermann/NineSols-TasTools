@@ -252,6 +252,7 @@ public class CelesteTasSettings {
             SyncSettings();
         }
     }
+    */
     public bool InfoSubpixelIndicator {
         get => StudioShared.InfoSubpixelIndicator;
         set {
@@ -259,6 +260,7 @@ public class CelesteTasSettings {
             SyncSettings();
         }
     }
+    /*
     public HudOptions InfoCustom {
         get => StudioShared.InfoCustom;
         set {

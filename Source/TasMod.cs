@@ -46,6 +46,8 @@ public class TasMod : BaseUnityPlugin {
     private void Awake() {
         Log.Init(Logger);
         Instance = this;
+        
+            Physics.simulationMode = SimulationMode.Script;
 
         harmony = Harmony.CreateAndPatchAll(typeof(TasMod).Assembly);
 
@@ -94,20 +96,25 @@ public class TasMod : BaseUnityPlugin {
     private void EarlyUpdate() {
         Log.TasTrace("-- (early update) --");
         
-        try {
-            Manager.UpdateMeta();
-            if (Manager.Running) {
-                Manager.Update();
-            }
-        } catch (Exception e) {
-            e.LogException("");
-        }
         
         Log.TasTrace("-- FRAME BEGIN --");
     }
 
     private void PostLateUpdate() {
         Log.TasTrace("-- FRAME END --");
+        
+        try {
+            Manager.UpdateMeta();
+            if (Manager.Running) {
+                Manager.Update();
+            }
+            Log.TasTrace($"State: {Manager.CurrState} -> {Manager.NextState}");
+
+            // TODO: ensure consistent fixedupdate
+        } catch (Exception e) {
+            e.LogException("");
+        }
+        
     }
 
     private void FixedUpdate() {

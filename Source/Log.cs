@@ -1,5 +1,6 @@
 using BepInEx.Logging;
 using NineSolsAPI;
+using UnityEngine;
 
 namespace TAS;
 
@@ -27,8 +28,9 @@ internal static class Log {
     private const bool TasTraceEnabled = false;
     
     internal static void TasTrace(object data) {
-        if (TasTraceEnabled && Manager.Running) {
-            ToastManager.Toast(data);
+        // if (TasTraceEnabled && Manager.CurrState is not Manager.State.Disabled and not Manager.State.Paused) {
+        if (TasTraceEnabled && Manager.CurrState is not Manager.State.Disabled  && Time.timeScale > 0) {
+            Info(data);
         }
     }
 }
