@@ -119,10 +119,6 @@ public static class Manager {
 
         CurrState = NextState;
 
-        while (mainThreadActions.TryDequeue(out var action)) {
-            action.Invoke();
-        }
-
         // Savestates.Update();
 
         if (!Running || CurrState == State.Paused || IsLoading()) {
@@ -176,6 +172,10 @@ public static class Manager {
     public static void UpdateMeta() {
         if (!Hotkeys.Initialized) {
             return; // Still loading
+        }
+        
+        while (mainThreadActions.TryDequeue(out var action)) {
+            action.Invoke();
         }
 
         Hotkeys.UpdateMeta();
