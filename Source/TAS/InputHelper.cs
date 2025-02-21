@@ -18,9 +18,7 @@ public static class InputHelper {
     [HarmonyPatch(typeof(InputManager), "UpdateInternal")]
     [HarmonyPrefix]
     public static void InControlManagerUpdateInternal() {
-        if (Manager.Running) {
-            ToastManager.Toast("-- (update incontrolmanager) --");
-        }
+        Log.TasTrace("-- (update incontrolmanager) --");
     }
     
 
@@ -100,7 +98,7 @@ public static class InputHelper {
             UnlockTargetFramerate();
         }
         
-        ToastManager.Toast($"Set targetFramerate={Application.targetFrameRate} captureFramerate={Time.captureFramerate}");
+        Log.TasTrace($"Set targetFramerate={Application.targetFrameRate} captureFramerate={Time.captureFramerate}");
     }
 
     [DisableRun]
@@ -116,13 +114,13 @@ public static class InputHelper {
             previousTargetFramerate = null;
         }
         
-        ToastManager.Toast($"Reset targetFramerate={Application.targetFrameRate} captureFramerate={Time.captureFramerate}");
+        Log.TasTrace($"Reset targetFramerate={Application.targetFrameRate} captureFramerate={Time.captureFramerate}");
     }
 
     private static InputFrame? currentFeed = null;
 
     public static void FeedInputs(InputFrame inputFrame) {
-        ToastManager.Toast($"Feeding {inputFrame}");
+        Log.TasTrace($"Feeding {inputFrame}");
         currentFeed = inputFrame;
     }
 

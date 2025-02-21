@@ -1,4 +1,5 @@
 using BepInEx.Logging;
+using NineSolsAPI;
 
 namespace TAS;
 
@@ -22,4 +23,12 @@ internal static class Log {
     internal static void Warn(object data) => logSource.LogWarning(data);
 
     internal static void LogMessage(object data, LogLevel level) => logSource.Log(level, data);
+
+    private const bool TasTraceEnabled = false;
+    
+    internal static void TasTrace(object data) {
+        if (TasTraceEnabled && Manager.Running) {
+            ToastManager.Toast(data);
+        }
+    }
 }

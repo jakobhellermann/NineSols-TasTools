@@ -12,6 +12,7 @@ using StudioCommunication.Util;
 using TAS.Communication;
 using TAS.Module;
 using TAS.Utils;
+using UnityEngine;
 
 namespace TAS;
 
@@ -91,11 +92,8 @@ public class TasMod : BaseUnityPlugin {
     }
 
     private void EarlyUpdate() {
-        // if (Manager.Running && !Manager.SkipFrame) ToastManager.Toast("-- FRAME BEGIN --");
-    }
-
-    private void PostLateUpdate() {
-        // ToastManager.Toast(Time.deltaTime);
+        Log.TasTrace("-- (early update) --");
+        
         try {
             Manager.UpdateMeta();
             if (Manager.Running) {
@@ -104,7 +102,19 @@ public class TasMod : BaseUnityPlugin {
         } catch (Exception e) {
             e.LogException("");
         }
-        // if (Manager.Running && !Manager.SkipFrame) ToastManager.Toast("-- FRAME END --");
+        
+        Log.TasTrace("-- FRAME BEGIN --");
+    }
+
+    private void PostLateUpdate() {
+        Log.TasTrace("-- FRAME END --");
+    }
+
+    private void FixedUpdate() {
+        Log.TasTrace($"-- FixedUpdate dt={Time.fixedDeltaTime}--");
+    }
+    private void Update() {
+        Log.TasTrace($"-- Update dt={Time.deltaTime}-- ");
     }
 
 
