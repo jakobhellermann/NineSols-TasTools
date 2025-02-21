@@ -18,7 +18,7 @@ public sealed class CommunicationAdapterCeleste() : CommunicationAdapterBase(Loc
     }
 
     protected override void OnConnectionChanged() {
-        ToastManager.Toast($"On connection changed: {Connected}");
+        Log.Info($"On connection changed: {Connected}");
         if (Connected) {
             CommunicationWrapper.SendCurrentBindings();
             // CommunicationWrapper.SendSettings(TasSettings.StudioShared);
