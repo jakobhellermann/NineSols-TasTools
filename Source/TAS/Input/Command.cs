@@ -1,11 +1,15 @@
+using Celeste.Mod;
+using Celeste.Mod.Helpers;
+using JetBrains.Annotations;
+using StudioCommunication;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using JetBrains.Annotations;
-using StudioCommunication;
 using TAS.Communication;
+using TAS.Module;
+using TAS.Utils;
 
 namespace TAS.Input;
 
@@ -13,55 +17,49 @@ namespace TAS.Input;
 public enum ExecuteTiming : byte {
     /// Executes the command while parsing inputs, like Read commands
     Parse = 1 << 0,
-
     /// Executes the command at runtime while playing inputs, like Console commands
     Runtime = 1 << 1,
 }
 
 /// Creates a command which can be used inside TAS files
-/// The signature of the target method **must** match
-/// <see cref="Execute" />
-[AttributeUsage(AttributeTargets.Method)]
-[MeansImplicitUse]
+/// The signature of the target method **must** match <see cref="Execute"/>
+[AttributeUsage(AttributeTargets.Method), MeansImplicitUse]
 public class TasCommandAttribute(string name) : Attribute {
     /// Name of this command inside the TAS file
     public readonly string Name = name;
-
     /// Alternative names which are also recognized as this command
     public string[] Aliases = [];
 
     /// Whether this command affects the TAS or is purely informational
     public bool CalcChecksum = true;
-
     /// Whether this command changes the game in ways which are illegal outside of testing starts
     public bool LegalInFullGame = true;
-
     /// Timing when this command should be executed
     public ExecuteTiming ExecuteTiming = ExecuteTiming.Runtime;
 
-    /// Optional type which implements the
-    /// <see cref="ITasCommandMeta" />
-    /// interface,
+    /// Optional type which implements the <see cref="ITasCommandMeta"/> interface,
     /// to provide additional metadata about the command for Studio
     public Type? MetaDataProvider = null;
-
     internal ITasCommandMeta? MetaData = null;
 
     internal MethodInfo m_Execute = null!;
-
     public void Execute(CommandLine commandLine, int studioLine, string filePath, int fileLine) {
         m_Execute.Invoke(null, [commandLine, studioLine, filePath, fileLine]);
     }
 
 #if DEBUG
     internal void Validate() {
-        var executeMethod = typeof(TasCommandAttribute).GetMethod(nameof(Execute))!;
+        $"Validating command '{Name}'...".Log(LogLevel.Debug);
+        var executeMethod = typeof(TasCommandAttribute).GetMethodInfo(nameof(Execute))!;
         Debug.Assert(m_Execute != null);
         Debug.Assert(m_Execute.GetParameters().Length == executeMethod.GetParameters().Length);
-        for (var i = 0; i < m_Execute.GetParameters().Length; i++)
+        for (int i = 0; i < m_Execute.GetParameters().Length; i++) {
             Debug.Assert(m_Execute.GetParameters()[i].ParameterType == executeMethod.GetParameters()[i].ParameterType);
+        }
 
-        if (MetaDataProvider != null) Debug.Assert(typeof(ITasCommandMeta).IsAssignableFrom(MetaDataProvider));
+        if (MetaDataProvider != null) {
+            Debug.Assert(typeof(ITasCommandMeta).IsAssignableFrom(MetaDataProvider));
+        }
     }
 #endif
 
@@ -71,9 +69,11 @@ public class TasCommandAttribute(string name) : Attribute {
     }
 }
 
+/// Represents a fully parsed command-line in a TAS file
 public readonly record struct Command(
     CommandLine CommandLine,
     TasCommandAttribute Attribute,
+
     string FilePath,
     int FileLine,
     int StudioLine,
@@ -85,54 +85,50 @@ public readonly record struct Command(
     public static bool Parsing { get; private set; }
 
     public void Invoke() => Attribute.Execute(CommandLine, StudioLine, FilePath, FileLine);
-
-    public bool Is(string commandName) => CommandLine.IsCommand(commandName);
+    public bool Is(string commandName) => Attribute.IsName(commandName);
 
     public string[] Args => CommandLine.Arguments;
+    public string LineText => CommandLine.Arguments.Length == 0 ? Attribute.Name : $"{Attribute.Name}{DefaultSeparator}{string.Join(DefaultSeparator, CommandLine.Arguments)}";
 
-    public string LineText => CommandLine.Arguments.Length == 0
-        ? Attribute.Name
-        : $"{Attribute.Name}{DefaultSeparator}{string.Join(DefaultSeparator, CommandLine.Arguments)}";
-
-    public static bool TryParse(InputController inputController, string filePath, int fileLine, string lineText,
-        int frame, int studioLine, out Command command) {
+    public static bool TryParse(string filePath, int fileLine, string lineText, int frame, int studioLine, out Command command) {
         command = default;
 
-        if (string.IsNullOrWhiteSpace(lineText) || !char.IsLetter(lineText[0]) ||
-            !CommandLine.TryParse(lineText, out var commandLine)) return false;
+        if (string.IsNullOrWhiteSpace(lineText) || !char.IsLetter(lineText[0]) || !CommandLine.TryParse(lineText, out var commandLine)) {
+            return false;
+        }
 
-        var error = $"""
-                     Failed to parse command "{lineText.Trim()}" at line {fileLine} of the file "{filePath}"
-                     """;
+        string error = $"""
+                        Failed to parse command "{lineText.Trim()}" at line {fileLine} of the file "{filePath}"
+                        """;
         try {
             var info = Commands.FirstOrDefault(info => info.IsName(commandLine.Command));
             if (info == null) {
-                Log.Error(error);
+                error.Log();
                 return false;
             }
 
-            if (info.ExecuteTiming.Has(ExecuteTiming.Parse)) {
-                Parsing = true;
-                info.Execute(commandLine, studioLine, filePath, fileLine);
-                Parsing = false;
-            }
-
             command = new Command(commandLine, info, filePath, fileLine, studioLine, frame);
-            if (!inputController.Commands.TryGetValue(frame, out var commands))
-                inputController.Commands[frame] = commands = new List<Command>();
-            commands.Add(command);
-
             return true;
         } catch (Exception e) {
-            Log.Error(e);
+            e.LogException(error);
             return false;
+        }
+    }
+
+    /// Invokes the command's target method if it should generate inputs
+    public void Setup() {
+        if (Attribute.ExecuteTiming.Has(ExecuteTiming.Parse)) {
+            Parsing = true;
+            Attribute.Execute(CommandLine, StudioLine, FilePath, FileLine);
+            Parsing = false;
         }
     }
 
     [Initialize]
     private static void CollectCommands() {
+        // TODO: Re-collect commands if mod is loaded late (i.e. through installing dependencies)
         Commands.Clear();
-        Commands.AddRange(typeof(TasMod).Assembly.GetTypes()
+        Commands.AddRange(FakeAssembly.GetFakeEntryAssembly().GetTypesSafe()
             .SelectMany(type => type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static))
             .Where(method => method.GetCustomAttribute<TasCommandAttribute>() != null)
             .Select(method => {
@@ -141,8 +137,9 @@ public readonly record struct Command(
 #if DEBUG
                 attr.Validate();
 #endif
-                if (attr.MetaDataProvider != null)
+                if (attr.MetaDataProvider != null) {
                     attr.MetaData = (ITasCommandMeta?)Activator.CreateInstance(attr.MetaDataProvider);
+                }
                 return attr;
             }));
 
