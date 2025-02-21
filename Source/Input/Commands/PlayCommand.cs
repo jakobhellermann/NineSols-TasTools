@@ -22,7 +22,7 @@ public static class PlayCommand {
             // Don't include labels before the current line
             // TODO ReplaceLineEndings
             foreach (var line in File.ReadAllText(filePath).Split('\n').Skip(fileLine)) {
-                if (!StudioCommunication.Comment.IsLabel(line)) continue;
+                if (!CommentLine.IsLabel(line)) continue;
 
                 var label = line[1..]; // Remove the #
                 yield return new CommandAutoCompleteEntry { Name = label, IsDone = true, HasNext = false };

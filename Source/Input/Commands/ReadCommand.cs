@@ -23,7 +23,9 @@ public static class ReadCommand {
             hash = 31 * hash + 17 * InputController.StudioTasFilePath.GetStableHashCode();
 
             if (args.Length >= 1 && !string.IsNullOrWhiteSpace(args[0])) {
-                if (Path.GetDirectoryName(filePath) is not { } fileDir) return hash;
+                if (Path.GetDirectoryName(filePath) is not { } fileDir) {
+                    return hash;
+                }
 
                 var subDir = Path.GetDirectoryName(args[0]) ?? string.Empty;
                 var targetDir = Path.Combine(fileDir, subDir);
@@ -41,24 +43,31 @@ public static class ReadCommand {
 
         public IEnumerator<CommandAutoCompleteEntry> GetAutoCompleteEntries(string[] args, string filePath,
             int fileLine) {
-            if (Path.GetDirectoryName(filePath) is not { } fileDir) yield break;
+            if (Path.GetDirectoryName(filePath) is not { } fileDir) {
+                yield break;
+            }
 
             if (args.Length == 1) {
                 // Filename
                 var subDir = Path.GetDirectoryName(args[0]) ?? string.Empty;
                 var targetDir = Path.Combine(fileDir, subDir);
 
-                if (!Directory.Exists(targetDir)) yield break;
+                if (!Directory.Exists(targetDir)) {
+                    yield break;
+                }
 
                 var prefix = Path.GetRelativePath(fileDir, targetDir).Replace('\\', '/') + "/";
-                if (prefix.StartsWith("./")) prefix = prefix["./".Length..];
+                if (prefix.StartsWith("./")) {
+                    prefix = prefix["./".Length..];
+                }
 
                 yield return new CommandAutoCompleteEntry { Name = "../", Prefix = prefix, IsDone = false };
 
                 foreach (var dir in Directory.GetDirectories(targetDir).OrderBy(Path.GetFileName)) {
                     var dirName = Path.GetFileName(dir);
-                    if (string.IsNullOrWhiteSpace(dirName) ||
-                        dirName.StartsWith(".")) continue; // Ignore hidden directories
+                    if (string.IsNullOrWhiteSpace(dirName) || dirName.StartsWith(".")) {
+                        continue; // Ignore hidden directories
+                    }
 
                     yield return new CommandAutoCompleteEntry { Name = $"{dirName}/", Prefix = prefix, IsDone = false };
                 }
@@ -66,7 +75,9 @@ public static class ReadCommand {
                 foreach (var file in Directory.GetFiles(targetDir).OrderBy(Path.GetFileName)) {
                     var fileName = Path.GetFileName(file);
                     if (string.IsNullOrWhiteSpace(fileName) || fileName.StartsWith(".") ||
-                        Path.GetExtension(fileName) != ".tas") continue; // Ignore hidden / non-TAS files
+                        Path.GetExtension(fileName) != ".tas") {
+                        continue; // Ignore hidden / non-TAS files
+                    }
 
                     yield return new CommandAutoCompleteEntry {
                         Name = Path.GetFileNameWithoutExtension(fileName), Prefix = prefix, IsDone = true,
@@ -76,13 +87,16 @@ public static class ReadCommand {
             } else if (args.Length is 2 or 3) {
                 // Starting / ending labels
                 var fullPath = Path.Combine(fileDir, $"{args[0]}.tas");
-                if (!File.Exists(fullPath)) yield break;
+                if (!File.Exists(fullPath)) {
+                    yield break;
+                }
 
                 // Don't include labels before the starting one for the ending label
                 var afterStartingLabel = args.Length == 2;
-                // TODO ReplaceLineEndings
                 foreach (var line in File.ReadAllText(fullPath).Split('\n')) {
-                    if (!StudioCommunication.Comment.IsLabel(line)) continue;
+                    if (!CommentLine.IsLabel(line)) {
+                        continue;
+                    }
 
                     var label = line[1..]; // Remove the #
                     if (!afterStartingLabel) {
@@ -110,12 +124,17 @@ public static class ReadCommand {
     [TasCommand("Read", ExecuteTiming = ExecuteTiming.Parse, MetaDataProvider = typeof(ReadMeta))]
     private static void Read(CommandLine commandLine, int studioLine, string filePath, int fileLine) {
         var args = commandLine.Arguments;
-        if (args.Length == 0) return;
+        if (args.Length == 0) {
+            return;
+        }
 
         var commandName = $"Read, {string.Join(", ", args)}";
 
         var fileDirectory = Path.GetDirectoryName(filePath);
-        if (string.IsNullOrWhiteSpace(fileDirectory)) fileDirectory = Directory.GetCurrentDirectory();
+        if (string.IsNullOrWhiteSpace(fileDirectory)) {
+            fileDirectory = Directory.GetCurrentDirectory();
+        }
+
         if (string.IsNullOrWhiteSpace(fileDirectory)) {
             Log.Error("Failed to get current directory for Read command");
             return;
@@ -140,11 +159,12 @@ public static class ReadCommand {
                 return;
             }
 
-            if (args.Length > 2)
+            if (args.Length > 2) {
                 if (!TryGetLine(args[2], path, out endLine)) {
                     AbortTas($"\"{commandName}\" failed\n{args[2]} is invalid", true);
                     return;
                 }
+            }
         }
 
         var readCommandDetail = $"{commandName}: line {fileLine} of the file \"{filePath}\"";
@@ -156,12 +176,16 @@ public static class ReadCommand {
 
         readCommandStack.Add(readCommandDetail);
         Manager.Controller.ReadFile(path, startLine, endLine, studioLine);
-        if (readCommandStack.Count > 0) readCommandStack.RemoveAt(readCommandStack.Count - 1);
+        if (readCommandStack.Count > 0) {
+            readCommandStack.RemoveAt(readCommandStack.Count - 1);
+        }
     }
 
     private static string? FindTargetFile(string commandName, string fileDirectory, string filePath,
         out string errorMessage) {
-        if (!filePath.EndsWith(".tas", StringComparison.InvariantCulture)) filePath += ".tas";
+        if (!filePath.EndsWith(".tas", StringComparison.InvariantCulture)) {
+            filePath += ".tas";
+        }
 
         var path = Path.Combine(fileDirectory, filePath);
         if (File.Exists(path)) {
