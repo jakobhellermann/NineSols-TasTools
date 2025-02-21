@@ -22,10 +22,10 @@ outdir = "./build"
 source = "build/dll"
 target = "."
 
-[[build.copy]]
-source = "build/Studio"
-target = "Studio"
+# [[build.copy]]
+# source = "build/Studio"
+# target = "Studio"
 
 [publish]
 repository = "https://thunderstore.io"
-communities = [ "nine-sols" ]
+communities = ["nine-sols"]
