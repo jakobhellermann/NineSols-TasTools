@@ -1,104 +1,165 @@
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Input;
-using Monocle;
+using System.Reflection;
+using HarmonyLib;
+using InControl;
 using StudioCommunication;
 using TAS.Input;
-using TAS.Input.Commands;
-using TAS.Utils;
+using UnityEngine;
 
 namespace TAS;
 
+[HarmonyPatch]
 public static class InputHelper {
-    public static void FeedInputs(InputFrame input) {
-        GamePadDPad pad = default;
-        GamePadThumbSticks sticks = default;
-        GamePadState gamePadState = default;
-        if (input.Actions.Has(Actions.Feather)) {
-            SetFeather(input, ref pad, ref sticks);
-        } else {
-            SetDPad(input, ref pad, ref sticks);
+    #region Actual TimeScale Patches
+
+    private static float actualTimeScale = Time.timeScale;
+    
+    [HarmonyPatch(typeof(InputManager), "UpdateInternal")]
+    [HarmonyPrefix]
+    public static void InControlManagerUpdateInternal() {
+        if (Manager.Running) {
+            ToastManager.Toast("-- (update incontrolmanager) --");
         }
+    }
+    
 
-        SetGamePadState(input, ref gamePadState, ref pad, ref sticks);
-
-        MInput.GamePadData gamePadData = MInput.GamePads[Celeste.Input.Gamepad];
-        gamePadData.PreviousState = gamePadData.CurrentState;
-        gamePadData.CurrentState = gamePadState;
-
-        MouseCommand.SetMouseState();
-        SetKeyboardState(input);
-
-        MInput.UpdateVirtualInputs();
+    [HarmonyPatch(typeof(RCGTime), nameof(RCGTime.timeScale), MethodType.Getter)]
+    [HarmonyPrefix]
+    public static bool TimeScaleGet(ref float __result) {
+        __result = actualTimeScale;
+        return false;
     }
 
-    private static void SetKeyboardState(InputFrame input) {
-        MInput.Keyboard.PreviousState = MInput.Keyboard.CurrentState;
-
-        HashSet<Keys> keys = PressCommand.GetKeys();
-        if (input.Actions.Has(Actions.Confirm)) {
-            keys.Add(BindingHelper.Confirm2);
-        }
-
-        if (input.Actions.Has(Actions.LeftMoveOnly)) {
-            keys.Add(BindingHelper.LeftMoveOnly);
-        }
-
-        if (input.Actions.Has(Actions.RightMoveOnly)) {
-            keys.Add(BindingHelper.RightMoveOnly);
-        }
-
-        if (input.Actions.Has(Actions.UpMoveOnly)) {
-            keys.Add(BindingHelper.UpMoveOnly);
-        }
-
-        if (input.Actions.Has(Actions.DownMoveOnly)) {
-            keys.Add(BindingHelper.DownMoveOnly);
-        }
-
-        keys.UnionWith(input.PressedKeys);
-
-        MInput.Keyboard.CurrentState = new KeyboardState(keys.ToArray());
+    [HarmonyPatch(typeof(RCGTime), nameof(RCGTime.timeScale), MethodType.Setter)]
+    [HarmonyPrefix]
+    public static bool TimeScaleSet(ref float value) {
+        actualTimeScale = value;
+        // Time.timeScale = value;
+        return false;
     }
 
-    private static void SetFeather(InputFrame input, ref GamePadDPad pad, ref GamePadThumbSticks sticks) {
-        pad = new GamePadDPad(ButtonState.Released, ButtonState.Released, ButtonState.Released, ButtonState.Released);
-        sticks = new GamePadThumbSticks(input.StickPosition, input.DashOnlyStickPosition);
+    [HarmonyPatch(typeof(RCGTime), nameof(RCGTime.GlobalSimulationSpeed), MethodType.Setter)]
+    [HarmonyPrefix]
+    public static bool GlobalSimSpeedSet(float value) {
+        var field = typeof(RCGTime).GetField("_globalSimulationSpeed", BindingFlags.NonPublic | BindingFlags.Static);
+        if (field is null) {
+            Log.Error("Could not set _globalSimulationSpeed: field does not exist");
+            return true;
+        }
+
+        field.SetValue(null, value);
+        // Time.timeScale = RCGTime._globalSimulationSpeed * actualTimeScale;
+
+        return false;
     }
 
-    private static void SetDPad(InputFrame input, ref GamePadDPad pad, ref GamePadThumbSticks sticks) {
-        pad = new GamePadDPad(
-            input.Actions.Has(Actions.Up) ? ButtonState.Pressed : ButtonState.Released,
-            input.Actions.Has(Actions.Down) ? ButtonState.Pressed : ButtonState.Released,
-            input.Actions.Has(Actions.Left) ? ButtonState.Pressed : ButtonState.Released,
-            input.Actions.Has(Actions.Right) ? ButtonState.Pressed : ButtonState.Released
-        );
-        sticks = new GamePadThumbSticks(new Vector2(0, 0), input.DashOnlyStickPosition);
+    #endregion
+
+    public static void WriteActualTime() {
+        Time.timeScale = actualTimeScale;
     }
 
-    private static void SetGamePadState(InputFrame input, ref GamePadState state, ref GamePadDPad pad, ref GamePadThumbSticks sticks) {
-        state = new GamePadState(
-            sticks,
-            new GamePadTriggers(input.Actions.Has(Actions.Journal) ? 1f : 0f, 0),
-            new GamePadButtons(
-                (input.Actions.Has(Actions.Jump) ? BindingHelper.JumpAndConfirm : 0)
-                | (input.Actions.Has(Actions.Jump2) ? BindingHelper.Jump2 : 0)
-                | (input.Actions.Has(Actions.DemoDash) ? BindingHelper.DemoDash : 0)
-                | (input.Actions.Has(Actions.DemoDash2) ? BindingHelper.DemoDash2 : 0)
-                | (input.Actions.Has(Actions.Dash) ? BindingHelper.DashAndTalkAndCancel : 0)
-                | (input.Actions.Has(Actions.Dash2) ? BindingHelper.Dash2AndCancel : 0)
-                | (input.Actions.Has(Actions.Grab) ? BindingHelper.Grab : 0)
-                | (input.Actions.Has(Actions.Grab2) ? BindingHelper.Grab2 : 0)
-                | (input.Actions.Has(Actions.Start) ? BindingHelper.Pause : 0)
-                | (input.Actions.Has(Actions.Restart) ? BindingHelper.QuickRestart : 0)
-                | (input.Actions.Has(Actions.Up) ? BindingHelper.Up : 0)
-                | (input.Actions.Has(Actions.Down) ? BindingHelper.Down : 0)
-                | (input.Actions.Has(Actions.Left) ? BindingHelper.Left : 0)
-                | (input.Actions.Has(Actions.Right) ? BindingHelper.Right : 0)
-                | (input.Actions.Has(Actions.Journal) ? BindingHelper.JournalAndTalk : 0)
-            ),
-            pad
-        );
+    public static void StopActualTime() {
+        Time.timeScale = 0;
+    }
+
+
+    private static Action inputManagerUpdateInternal =
+        AccessTools.MethodDelegate<Action>(AccessTools.Method(typeof(InputManager), "UpdateInternal"));
+
+    private const int DefaultTasFramerate = 60;
+
+    public static void UnlockTargetFramerate() {
+        Application.targetFrameRate = 0;
+    }
+
+    public static void LockTargetFramerate() {
+        Application.targetFrameRate = Time.captureFramerate;
+    }
+
+
+    public static void SetFramerate(int framerate) {
+        if (Application.targetFrameRate == Time.captureFramerate) Application.targetFrameRate = framerate;
+
+        Time.captureFramerate = framerate;
+    }
+
+    private static int? previousTargetFramerate;
+
+    [EnableRun]
+    private static void EnableRun() {
+        InputManager.SuspendInBackground = false;
+        InputManager.Enabled = true;
+        // InputManager.ClearInputState();
+
+        SetFramerate(DefaultTasFramerate);
+
+        if (previousTargetFramerate == null) {
+            previousTargetFramerate = Application.targetFrameRate;
+            UnlockTargetFramerate();
+        }
+        
+        ToastManager.Toast($"Set targetFramerate={Application.targetFrameRate} captureFramerate={Time.captureFramerate}");
+    }
+
+    [DisableRun]
+    private static void DisableRun() {
+        InputManager.SuspendInBackground = true;
+        InputManager.ClearInputState();
+        // inputManagerUpdateInternal.Invoke();
+
+        Time.captureFramerate = 0;
+
+        if (previousTargetFramerate is { } framerate) {
+            Application.targetFrameRate = framerate;
+            previousTargetFramerate = null;
+        }
+        
+        ToastManager.Toast($"Reset targetFramerate={Application.targetFrameRate} captureFramerate={Time.captureFramerate}");
+    }
+
+    private static InputFrame? currentFeed = null;
+
+    public static void FeedInputs(InputFrame inputFrame) {
+        ToastManager.Toast($"Feeding {inputFrame}");
+        currentFeed = inputFrame;
+    }
+
+
+    [HarmonyPatch(typeof(InputManager), "UpdateInternal")]
+    [HarmonyPrefix]
+    public static bool InputManagerUpdate() {
+        if (!Manager.Running) return true;
+
+        // if (Manager.SkipFrame) return false;
+        // ToastManager.Toast(
+        // $"imupdate  {Manager.Controller.CurrentFrameInTas} {Manager.Controller.Current} with dt {Time.deltaTime}");
+
+        return true;
+    }
+
+
+    private static Dictionary<Actions, Key> actionKeyMap = new() {
+        { Actions.Jump, Key.Space },
+        { Actions.Dash, Key.LeftShift },
+        { Actions.Up, Key.W },
+        { Actions.Down, Key.S },
+        { Actions.Left, Key.A },
+        { Actions.Right, Key.D },
+        { Actions.Grab, Key.K },
+    };
+
+    [HarmonyPatch(typeof(UnityKeyboardProvider), nameof(UnityKeyboardProvider.GetKeyIsPressed))]
+    [HarmonyPrefix]
+    public static bool GetKeyIsPressed(Key control, ref bool __result) {
+        if (!Manager.Running || currentFeed is null) return true;
+
+        foreach (var (action, actionKey) in actionKeyMap) {
+            if ((currentFeed.Actions & action) != 0 && actionKey == control) {
+                __result = true;
+            }
+        }
+        return false;
     }
 }

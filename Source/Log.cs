@@ -20,4 +20,6 @@ internal static class Log {
     internal static void Message(object data) => logSource.LogMessage(data);
 
     internal static void Warn(object data) => logSource.LogWarning(data);
+
+    internal static void LogMessage(object data, LogLevel level) => logSource.Log(level, data);
 }

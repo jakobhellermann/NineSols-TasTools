@@ -57,12 +57,12 @@ public class TasMod : BaseUnityPlugin {
 
         KeybindManager.Add(this, LaunchStudio, () => configOpenStudioShortcut.Value);
 
-        TasSettings = new CelesteTasSettings(Config);
+        TasSettings = new CelesteTasSettings();
         RCGLifeCycle.DontDestroyForever(gameObject);
 
-        AttributeUtils.CollectMethods<LoadAttribute>();
-        AttributeUtils.CollectMethods<UnloadAttribute>();
-        AttributeUtils.CollectMethods<InitializeAttribute>();
+        AttributeUtils.CollectAllMethods<LoadAttribute>();
+        AttributeUtils.CollectAllMethods<UnloadAttribute>();
+        AttributeUtils.CollectAllMethods<InitializeAttribute>();
 
 
         try {
@@ -74,6 +74,7 @@ public class TasMod : BaseUnityPlugin {
             Log.Error($"Failed to load {PluginInfo.PLUGIN_GUID}: {e}");
         }
 
+        // https://giannisakritidis.com/blog/Early-And-Super-Late-Update-In-Unity/
         PlayerLoopHelper.AddAction(PlayerLoopTiming.EarlyUpdate, new PlayerLoopItem(this, EarlyUpdate));
         PlayerLoopHelper.AddAction(PlayerLoopTiming.PostLateUpdate, new PlayerLoopItem(this, PostLateUpdate));
 
@@ -91,12 +92,18 @@ public class TasMod : BaseUnityPlugin {
 
     private void EarlyUpdate() {
         // if (Manager.Running && !Manager.SkipFrame) ToastManager.Toast("-- FRAME BEGIN --");
-        Manager.PreFrameUpdate();
     }
 
     private void PostLateUpdate() {
         // ToastManager.Toast(Time.deltaTime);
-        Manager.PostFrameUpdate();
+        try {
+            Manager.UpdateMeta();
+            if (Manager.Running) {
+                Manager.Update();
+            }
+        } catch (Exception e) {
+            e.LogException("");
+        }
         // if (Manager.Running && !Manager.SkipFrame) ToastManager.Toast("-- FRAME END --");
     }
 

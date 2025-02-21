@@ -1,18 +1,10 @@
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
-using Celeste;
-using Celeste.Mod;
-using Celeste.Pico8;
 using JetBrains.Annotations;
-using Monocle;
-using StudioCommunication;
-using System.Threading.Tasks;
-using TAS.Communication;
-using TAS.EverestInterop;
+using NineSolsAPI;
 using TAS.Input;
-using TAS.Input.Commands;
-using TAS.Module;
+using TAS.UnityInterop;
 using TAS.Utils;
 
 namespace TAS;
@@ -58,7 +50,7 @@ public static class Manager {
 
     private static readonly ConcurrentQueue<Action> mainThreadActions = new();
 
-#if DEBUG
+/*#if DEBUG
     // Hot-reloading support
     [Load]
     private static void RestoreStudioTasFilePath() {
@@ -79,7 +71,7 @@ public static class Manager {
         Controller.Stop();
         Controller.Clear();
     }
-#endif
+#endif*/
 
     public static void EnableRun() {
         if (Running) {
@@ -96,7 +88,7 @@ public static class Manager {
         AttributeUtils.Invoke<EnableRunAttribute>();
 
         // This needs to happen after EnableRun, otherwise the input state will be reset in BindingHelper.SetTasBindings
-        Savestates.EnableRun();
+        // Savestates.EnableRun();
     }
 
     public static void DisableRun() {
@@ -131,7 +123,7 @@ public static class Manager {
             action.Invoke();
         }
 
-        Savestates.Update();
+        // Savestates.Update();
 
         if (!Running || CurrState == State.Paused || IsLoading()) {
             return;
@@ -160,7 +152,7 @@ public static class Manager {
         }
 
         // Prevent executing unsafe actions unless explicitly allowed
-        if (SafeCommand.DisallowUnsafeInput && Controller.CurrentFrameInTas > 1) {
+        /*if (SafeCommand.DisallowUnsafeInput && Controller.CurrentFrameInTas > 1) {
             // Only allow specific scenes
             if (Engine.Scene is not (Level or LevelLoader or LevelExit or Emulator or LevelEnter)) {
                 DisableRun();
@@ -177,7 +169,7 @@ public static class Manager {
                     DisableRun();
                 }
             }
-        }
+        }*/
     }
 
     /// Updates everything around the TAS itself, like hotkeys, studio-communication, etc.
@@ -187,10 +179,10 @@ public static class Manager {
         }
 
         Hotkeys.UpdateMeta();
-        Savestates.UpdateMeta();
+        // Savestates.UpdateMeta();
         AttributeUtils.Invoke<UpdateMetaAttribute>();
 
-        SendStudioState();
+        // SendStudioState();
 
         // Pending EnableRun/DisableRun. Prevent overwriting
         if (Running && NextState == State.Disabled || !Running && NextState != State.Disabled) {
@@ -251,11 +243,12 @@ public static class Manager {
         }
 
         // Allow altering the playback speed with the right thumb-stick
-        float normalSpeed = Hotkeys.RightThumbSticksX switch {
+        /*float normalSpeed = Hotkeys.RightThumbSticksX switch {
             >=  0.001f => Hotkeys.RightThumbSticksX * TasSettings.FastForwardSpeed,
             <= -0.001f => (1 + Hotkeys.RightThumbSticksX) * TasSettings.SlowForwardSpeed,
             _          => 1.0f,
-        };
+        };*/
+        float normalSpeed = 1.0f;
 
         // Apply fast / slow forwarding
         switch (NextState) {
@@ -292,7 +285,7 @@ public static class Manager {
 
     /// TAS-execution is paused during loading screens
     public static bool IsLoading() {
-        return Engine.Scene switch {
+        /*return Engine.Scene switch {
             Level level => level.IsAutoSaving() && level.Session.Level == "end-cinematic",
             SummitVignette summit => !summit.ready,
             Overworld overworld => overworld.Current is OuiFileSelect { SlotIndex: >= 0 } slot && slot.Slots[slot.SlotIndex].StartingGame ||
@@ -300,7 +293,8 @@ public static class Manager {
                                    overworld.Next is OuiMainMenu && (UserIO.Saving || Everest._SavingSettings),
             Emulator emulator => emulator.game == null,
             _ => Engine.Scene is LevelExit or LevelLoader or GameLoader || Engine.Scene.GetType().Name == "LevelExitToLobby",
-        };
+        };*/
+        return false;
     }
 
     /// Determine if current TAS file is a draft
@@ -313,6 +307,7 @@ public static class Manager {
             .All(command => !command.Is("MidwayFileTime") && !command.Is("MidwayChapterTime"));
     }
 
+    /*
     public static bool PreventSendStudioState = false; // a cursed demand of tas helper's predictor
 
     internal static void SendStudioState() {
@@ -389,5 +384,5 @@ public static class Manager {
         writer.Flush();
 
         "Successfully dumped TAS file to console".ConsoleLog();
-    }
+    }*/
 }
