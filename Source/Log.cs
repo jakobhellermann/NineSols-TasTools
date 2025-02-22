@@ -29,7 +29,7 @@ internal static class Log {
     
     internal static void TasTrace(object data) {
         // if (TasTraceEnabled && Manager.CurrState is not Manager.State.Disabled and not Manager.State.Paused) {
-        if (TasTraceEnabled && Manager.CurrState is not Manager.State.Disabled  && Time.timeScale > 0) {
+        if (TasTraceEnabled && Manager.CurrState is not Manager.State.Disabled && Time.timeScale > 0) {
             Info(data);
         }
     }

@@ -120,10 +120,16 @@ public static class Manager {
         // TODO use rcg timescale
         Time.timeScale = 0;
         
-        ToastManager.Toast(Player.i.Velocity);
-        ToastManager.Toast(Player.i.transform.position);
+        stashedAnimDeltaMove = Player.i?.AnimationDeltaMove;
     }
+
+    private static Vector3? stashedAnimDeltaMove = Vector3.zero;
+    
     public static void DisablePause() {
+        if (Player.i && stashedAnimDeltaMove is {} deltaMove) {
+            Player.i.AnimationDeltaMove = deltaMove;
+            // ToastManager.Toast($"Restoring AnimationDeltaMove {deltaMove}");
+        }
         Time.timeScale = 1;
     }
 
@@ -165,7 +171,8 @@ public static class Manager {
 
         // Auto-pause at end of drafts
         if (!Controller.CanPlayback && IsDraft()) {
-            NextState = State.Paused;
+            // NextState = State.Paused;
+            NextState = State.Disabled;
         }
         // Pause the TAS if breakpoint is hit
         // Special-case for end of regular files, to update *Time-commands
@@ -330,7 +337,7 @@ public static class Manager {
         return Controller.Commands.Values
             .SelectMany(commands => commands)
             .All(command => !command.Is("FileTime") && !command.Is("ChapterTime"))
-        && Controller.Commands.GetValueOrDefault(Controller.Inputs.Count, [])
+        && DictionaryExtensions.GetValueOrDefault(Controller.Commands, Controller.Inputs.Count, [])
             .All(command => !command.Is("MidwayFileTime") && !command.Is("MidwayChapterTime"));
     }
 

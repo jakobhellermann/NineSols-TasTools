@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using NineSolsAPI;
 using StudioCommunication;
 using TAS.Utils;
 using UnityEngine;
@@ -26,6 +27,7 @@ public static class LoadCommand {
 
     [TasCommand("load", MetaDataProvider = typeof(LoadMeta))]
     private static void Load(CommandLine commandLine, int studioLine, string filePath, int fileLine) {
+        Log.TasTrace("Executing Load Command");
         if (commandLine.Arguments.Length != 3)
             AbortTas($"Invalid number of arguments in load command: '{commandLine.OriginalText}'.");
 
@@ -43,21 +45,28 @@ public static class LoadCommand {
             return;
         }
 
-        if (!GameCore.IsAvailable()) return;
+        if (!GameCore.IsAvailable() || GameCore.Instance.gameLevel == null) {
+            AbortTas("Attempted to start TAS outside of a level");
+            return;
+        }
         var gameCore = GameCore.Instance;
 
-        if (gameCore.gameLevel.SceneName != scene)
+        if (gameCore.gameLevel?.SceneName != scene) {
             gameCore.ChangeScene(new SceneConnectionPoint.ChangeSceneData {
                 sceneName = scene,
                 playerSpawnPosition = () => new Vector3(x, y, 0),
                 changeSceneMode = SceneConnectionPoint.ChangeSceneMode.Teleport,
                 findMode = SceneConnectionPoint.FindConnectionMode.ID,
             });
-
+        }
         gameCore.ResetLevel();
 
-        if (Player.i is not { } player) return;
+        if (Player.i is not { } player) {
+            AbortTas("Could not find player");
+            return;
+        }
         player.transform.position = player.transform.position with { x = x, y = y };
+        player.movementCounter = Vector2.zero;
 
         player.ChangeState(PlayerStateType.Normal);
         player.animator.Rebind();
@@ -67,6 +76,7 @@ public static class LoadCommand {
         player.Facing = Facings.Right;
         player.jumpState = Player.PlayerJumpState.None;
         player.varJumpSpeed = 0;
+        
         player.GroundCheck();
         Physics2D.SyncTransforms();
         

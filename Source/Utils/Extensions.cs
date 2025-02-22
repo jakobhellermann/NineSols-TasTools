@@ -412,6 +412,17 @@ internal static class ListExtensions {
 internal static class DictionaryExtensions {
     public static TValue GetValueOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> dict, TKey key,
         TValue defaultValue = default) => dict.TryGetValue(key, out var value) ? value : defaultValue;
+    
+    public static List<U> GetValueOrInsertDefault<T, U>(this Dictionary<T, List<U>> dict, T key) {
+        if (dict.TryGetValue(key, out var a)) {
+            return a;
+        } else {
+            dict[key] = new List<U>();
+            return dict[key];
+        }
+    }
+    
+    
 
     public static TKey LastKeyOrDefault<TKey, TValue>(this SortedDictionary<TKey, TValue> dict) =>
         dict.Count > 0 ? dict.Last().Key : default;

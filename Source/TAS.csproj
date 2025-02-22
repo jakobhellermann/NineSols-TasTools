@@ -38,6 +38,9 @@
         <Reference Include="UniTask">
             <HintPath>$(NineSolsPath)/NineSols_Data/Managed/UniTask.dll</HintPath>
         </Reference>
+        <Reference Include="Newtonsoft.Json">
+            <HintPath>$(NineSolsPath)/NineSols_Data/Managed/Newtonsoft.Json.dll</HintPath>
+        </Reference>
     </ItemGroup>
 
     <ItemGroup>
@@ -46,7 +49,7 @@
         <PackageReference Include="BepInEx.PluginInfoProps" Version="1.*" />
         <PackageReference Include="UnityEngine.Modules" Version="2022.3.18" IncludeAssets="compile" />
 
-        <PackageReference Include="NineSolsAPI" Version="0.4.0" />
+        <PackageReference Include="NineSolsAPI" Version="0.4.2" />
 
         <ProjectReference Include="../CelesteTAS/StudioCommunication/StudioCommunication.csproj" />
     </ItemGroup>

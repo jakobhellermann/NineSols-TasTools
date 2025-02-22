@@ -14,11 +14,12 @@ public class GameInfo {
 
     public static void Update(bool updateVel = false) {
         StudioInfo = UpdateInfoText();
-        LevelName = (GameCore.IsAvailable() ? GameCore.Instance.gameLevel?.name : null) ?? "";
+        LevelName = (GameCore.IsAvailable() && GameCore.Instance.gameLevel ? GameCore.Instance.gameLevel?.name : null) ?? "";
     }
 
 
     private static string UpdateInfoText() {
+        Log.TasTrace("Updating info text");
         var text = "";
 
         if (!ApplicationCore.IsAvailable()) return "Loading";

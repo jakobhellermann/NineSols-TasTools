@@ -8,9 +8,9 @@ using Cysharp.Threading.Tasks;
 using HarmonyLib;
 using JetBrains.Annotations;
 using NineSolsAPI;
-using StudioCommunication.Util;
 using TAS.Communication;
 using TAS.Module;
+using TAS.Tracer;
 using TAS.Utils;
 using UnityEngine;
 
@@ -46,8 +46,6 @@ public class TasMod : BaseUnityPlugin {
     private void Awake() {
         Log.Init(Logger);
         Instance = this;
-        
-            Physics.simulationMode = SimulationMode.Script;
 
         harmony = Harmony.CreateAndPatchAll(typeof(TasMod).Assembly);
 
@@ -66,6 +64,8 @@ public class TasMod : BaseUnityPlugin {
         AttributeUtils.CollectAllMethods<LoadAttribute>();
         AttributeUtils.CollectAllMethods<UnloadAttribute>();
         AttributeUtils.CollectAllMethods<InitializeAttribute>();
+        AttributeUtils.CollectAllMethods<BeforeTasFrame>();
+        AttributeUtils.CollectAllMethods<AfterTasFrame>();
 
 
         try {
@@ -93,40 +93,75 @@ public class TasMod : BaseUnityPlugin {
         }
     }
 
+    
     private void EarlyUpdate() {
-        Log.TasTrace("-- (early update) --");
-        
-        
         Log.TasTrace("-- FRAME BEGIN --");
+        
+        TasTracerState.TraceVarsThroughFrame("EarlyUpdate");
     }
 
     private void PostLateUpdate() {
+        TasTracerState.TraceVarsThroughFrame("PostLateUpdate");
+        
         Log.TasTrace("-- FRAME END --");
         
         try {
+            GameInfo.Update();
+
+            AttributeUtils.Invoke<AfterTasFrame>();
+            
+            if (Manager.Running) {
+                try {
+                    if (Manager.CurrState is Manager.State.Running or Manager.State.FrameAdvance) {
+                        TasTracer.TraceFrame();
+                    } else {
+                        if (TasTracer.TracePauseMode == TracePauseMode.Reduced) {
+                            TasTracer.TraceFramePause();
+                        } else if (TasTracer.TracePauseMode == TracePauseMode.Full) {
+                            TasTracer.TraceFrame();
+                        }
+                    }
+                } catch (Exception e) {
+                    e.LogException("Error trying to collect trace data");
+                }
+
+            }
+            
+            AttributeUtils.Invoke<BeforeTasFrame>();
+                
+            TasTracerState.AddFrameHistory("StateBefore", new TracerIrrelevantState($"{Manager.CurrState} -> {Manager.NextState}"));
+            TasTracerState.AddFrameHistory("UpdateMeta");
             Manager.UpdateMeta();
             if (Manager.Running) {
+                TasTracerState.AddFrameHistory("Update");
                 Manager.Update();
             }
             Log.TasTrace($"State: {Manager.CurrState} -> {Manager.NextState}");
+            TasTracerState.AddFrameHistory("StateAfter", new TracerIrrelevantState($"{Manager.CurrState} -> {Manager.NextState}"));
+            
+            TasTracerState.AddFrameHistory("ADM End", $"{Player.i?.AnimationDeltaMove}");
 
             // TODO: ensure consistent fixedupdate
         } catch (Exception e) {
             e.LogException("");
+            Manager.DisableRun();
         }
         
     }
 
     private void FixedUpdate() {
         Log.TasTrace($"-- FixedUpdate dt={Time.fixedDeltaTime}--");
+        
+        // TasTracerState.TraceVarsThroughFrame("FixedUpdate");
     }
     private void Update() {
         Log.TasTrace($"-- Update dt={Time.deltaTime}-- ");
+        
+        TasTracerState.TraceVarsThroughFrame("Update");
     }
 
-
     private void LateUpdate() {
-        GameInfo.Update();
+        TasTracerState.TraceVarsThroughFrame("LateUpdate");
     }
 
     private void OnDestroy() {
@@ -141,15 +176,20 @@ public class TasMod : BaseUnityPlugin {
 
 [AttributeUsage(AttributeTargets.Method)]
 [MeansImplicitUse]
-internal class LoadAttribute : Attribute {
-}
+internal class LoadAttribute : Attribute;
 
 [AttributeUsage(AttributeTargets.Method)]
 [MeansImplicitUse]
-internal class UnloadAttribute : Attribute {
-}
+internal class UnloadAttribute : Attribute;
 
 [AttributeUsage(AttributeTargets.Method)]
 [MeansImplicitUse]
-internal class InitializeAttribute : Attribute {
-}
+internal class InitializeAttribute : Attribute;
+
+[AttributeUsage(AttributeTargets.Method)]
+[MeansImplicitUse]
+internal class BeforeTasFrame : Attribute;
+
+[AttributeUsage(AttributeTargets.Method)]
+[MeansImplicitUse]
+internal class AfterTasFrame : Attribute;

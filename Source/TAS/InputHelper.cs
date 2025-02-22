@@ -18,7 +18,7 @@ public static class InputHelper {
     [HarmonyPatch(typeof(InputManager), "UpdateInternal")]
     [HarmonyPrefix]
     public static void InControlManagerUpdateInternal() {
-        Log.TasTrace("-- (update incontrolmanager) --");
+        // Log.TasTrace("-- (update incontrolmanager) --");
     }
     
 
@@ -53,6 +53,12 @@ public static class InputHelper {
     }
 
     #endregion
+
+    
+    [HarmonyPatch(typeof(Actor), nameof(Actor.OnRebindAnimatorMove))]
+    [HarmonyPatch(typeof(Actor), nameof(Actor.Move))]
+    [HarmonyPrefix]
+    public static bool DontRunWhenPaused() => Manager.CurrState != Manager.State.Paused;
 
     public static void WriteActualTime() {
         Time.timeScale = actualTimeScale;
@@ -89,7 +95,10 @@ public static class InputHelper {
     private static void EnableRun() {
         InputManager.SuspendInBackground = false;
         InputManager.Enabled = true;
-        // InputManager.ClearInputState();
+        InputManager.ClearInputState();
+        // typeof(InputManager).SetFieldValue("initialTime", Time.realtimeSinceStartup);
+        // typeof(InputManager).SetFieldValue("currentTick", 0U);
+        // typeof(InputManager).SetFieldValue("currentTime", 0f);
 
         SetFramerate(DefaultTasFramerate);
 
@@ -126,15 +135,11 @@ public static class InputHelper {
 
 
     [HarmonyPatch(typeof(InputManager), "UpdateInternal")]
-    [HarmonyPrefix]
-    public static bool InputManagerUpdate() {
-        if (!Manager.Running) return true;
-
-        // if (Manager.SkipFrame) return false;
-        // ToastManager.Toast(
-        // $"imupdate  {Manager.Controller.CurrentFrameInTas} {Manager.Controller.Current} with dt {Time.deltaTime}");
-
-        return true;
+    [HarmonyPostfix]
+    public static void InputManagerUpdate() {
+        if (!Manager.Running) return;
+        
+        TasTracerState.AddFrameHistory("InputManager.Update"/*, InputManager.CurrentTick, InputManager.CurrentTime*/);
     }
 
 
