@@ -319,6 +319,9 @@ public static class Manager {
 
     /// TAS-execution is paused during loading screens
     public static bool IsLoading() {
+
+        return GameCore.Instance.currentCoreState == GameCore.GameCoreState.ChangingScene;
+        
         /*return Engine.Scene switch {
             Level level => level.IsAutoSaving() && level.Session.Level == "end-cinematic",
             SummitVignette summit => !summit.ready,
