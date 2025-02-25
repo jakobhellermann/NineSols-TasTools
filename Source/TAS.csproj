@@ -74,7 +74,7 @@ Did you forget to adjust your NineSolsPath '$(DllPath)'?" />
         <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(CopyDir)" SkipUnchangedFiles="true" />
         <Copy SourceFiles="$(TargetDir)$(TargetName).pdb" DestinationFolder="$(CopyDir)" SkipUnchangedFiles="true" />
         
-        <Copy SourceFiles="$(TargetDir)StudioCommunication.dll" DestinationFolder="$(CopyDir)/../Plugins/" SkipUnchangedFiles="true" />
+<!--        <Copy SourceFiles="$(TargetDir)StudioCommunication.dll" DestinationFolder="$(CopyDir)/../Plugins/" SkipUnchangedFiles="true" />-->
     </Target>
 
     <Target Name="PackageMod" AfterTargets="Publish">
