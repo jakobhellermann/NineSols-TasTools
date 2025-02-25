@@ -56,7 +56,7 @@
         <PackageReference Include="BepInEx.PluginInfoProps" Version="2.*" />
         <PackageReference Include="UnityEngine.Modules" Version="2022.3.18" IncludeAssets="compile" />
 
-        <PackageReference Include="NineSolsAPI" Version="0.4.2" IncludeAssets="compile" />
+        <PackageReference Include="NineSolsAPI" Version="1.2.0" IncludeAssets="compile" />
         <ProjectReference Include="../CelesteTAS/StudioCommunication/StudioCommunication.csproj" />
     </ItemGroup>
 
@@ -73,6 +73,8 @@ Did you forget to adjust your NineSolsPath '$(DllPath)'?" />
         <Message Importance="high" Text="copying $(TargetPath) to $(CopyDir) ..." />
         <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(CopyDir)" SkipUnchangedFiles="true" />
         <Copy SourceFiles="$(TargetDir)$(TargetName).pdb" DestinationFolder="$(CopyDir)" SkipUnchangedFiles="true" />
+        
+        <Copy SourceFiles="$(TargetDir)StudioCommunication.dll" DestinationFolder="$(CopyDir)/../Plugins/" SkipUnchangedFiles="true" />
     </Target>
 
     <Target Name="PackageMod" AfterTargets="Publish">

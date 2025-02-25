@@ -83,7 +83,7 @@ enum TracePauseMode {
 }
 
 internal static class TasTracer {
-    private const string TraceDirRoot = "/tmp/TAS-Traces"; // TODO Path.GetTempPath()
+    private static string traceDirRoot = Path.Combine(Path.GetTempPath(), "TAS-Traces");
     public const TracePauseMode TracePauseMode = Tracer.TracePauseMode.None;
     private const bool CheckMismatches = true;
 
@@ -96,7 +96,7 @@ internal static class TasTracer {
 
 
     private static void ClearOldTraces() {
-        DeleteDirectoryChildren(TraceDirRoot);
+        DeleteDirectoryChildren(traceDirRoot);
     }
 
 
@@ -171,8 +171,8 @@ internal static class TasTracer {
         trace.Trace.Add(data);
     }
 
-    private static void SaveTrace(TasTrace trace) {
-        var json = JsonConvert.SerializeObject(trace, Formatting.Indented, new JsonSerializerSettings {
+    private static void SaveTrace(TasTrace newTrace) {
+        var json = JsonConvert.SerializeObject(newTrace, Formatting.Indented, new JsonSerializerSettings {
             ContractResolver = new WritableOnlyResolver(),
             Converters = new List<JsonConverter> {
                 new FuncConverter<Vector2>(vec => $"({vec.x:0.0000}, {vec.y:0.0000})"),
@@ -196,8 +196,8 @@ internal static class TasTracer {
         });
 
 
-        var name = Path.GetFileNameWithoutExtension(trace.FilePath);
-        var traceDir = Path.Combine(TraceDirRoot, name);
+        var name = Path.GetFileNameWithoutExtension(newTrace.FilePath);
+        var traceDir = Path.Combine(traceDirRoot, name);
         Directory.CreateDirectory(traceDir);
         var datetime = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
         var tracePath = Path.Combine(traceDir, $"{datetime}.json");
@@ -210,16 +210,17 @@ internal static class TasTracer {
 
         using var file = File.Open(latestChecksum, FileMode.OpenOrCreate, FileAccess.ReadWrite);
         var reader = new StreamReader(file);
-        if (reader.ReadToEnd() != trace.Checksum.ToString()) {
+        if (reader.ReadToEnd() != newTrace.Checksum.ToString()) {
             DeleteFileChildren(latest, "*.json");
             file.SetLength(0);
-            file.Write(Encoding.UTF8.GetBytes(trace.Checksum.ToString()));
+            file.Write(Encoding.UTF8.GetBytes(newTrace.Checksum.ToString()));
         }
 
         File.Copy(tracePath, Path.Combine(latest, $"{datetime}.json"), true);
     }
 
     private static void DeleteDirectoryChildren(string path) {
+        if (!Directory.Exists(path)) return;
         foreach (var dir in Directory.GetDirectories(path)) {
             Directory.Delete(dir, true);
         }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using DebugModPlus;
 using NineSolsAPI;
 using StudioCommunication;
 using TAS.Utils;
@@ -52,12 +53,12 @@ public static class LoadCommand {
         var gameCore = GameCore.Instance;
 
         if (gameCore.gameLevel?.SceneName != scene) {
-            gameCore.ChangeScene(new SceneConnectionPoint.ChangeSceneData {
+            gameCore.ChangeSceneCompat(new SceneConnectionPoint.ChangeSceneData {
                 sceneName = scene,
                 playerSpawnPosition = () => new Vector3(x, y, 0),
                 changeSceneMode = SceneConnectionPoint.ChangeSceneMode.Teleport,
                 findMode = SceneConnectionPoint.FindConnectionMode.ID,
-            });
+            }, false);
         }
         gameCore.ResetLevel();
 

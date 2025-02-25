@@ -318,6 +318,7 @@ public static class Manager {
 
     /// TAS-execution is paused during loading screens
     public static bool IsLoading() {
+        if (!GameCore.IsAvailable()) return true;
 
         return GameCore.Instance.currentCoreState == GameCore.GameCoreState.ChangingScene;
         
