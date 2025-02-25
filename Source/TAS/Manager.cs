@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using JetBrains.Annotations;
+using NineSolsAPI;
 using StudioCommunication;
 using TAS.Communication;
 using TAS.Input;
@@ -52,6 +53,8 @@ public static class Manager {
 
     private static readonly ConcurrentQueue<Action> mainThreadActions = new();
 
+    public static bool DidComplete;
+
 /*#if DEBUG
     // Hot-reloading support
     [Load]
@@ -81,6 +84,7 @@ public static class Manager {
         }
 
         $"Starting TAS: {Controller.FilePath}".Log();
+        DidComplete = false;
 
         CurrState = NextState = State.Running;
         PlaybackSpeed = 1.0f;
@@ -166,6 +170,10 @@ public static class Manager {
         if (!couldPlayback) {
             DisableRun();
             return;
+        }
+
+        if (!Controller.CanPlayback) {
+            DidComplete = true;
         }
 
         // Auto-pause at end of drafts

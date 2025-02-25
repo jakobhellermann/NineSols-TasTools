@@ -21,7 +21,7 @@ namespace TAS.Tracer;
 internal record TasTrace {
     public List<TraceData> Trace = [];
     public int Checksum;
-    public string FilePath;
+    public string? FilePath;
 
     public override string ToString() => Trace.Select((x, n) => $"{x} {n}").Join(delimiter: "\n");
 }
@@ -113,10 +113,11 @@ internal static class TasTracer {
 
     [DisableRun]
     private static void EndTrace() {
-        if (Manager.CurrState != Manager.State.Running) {
+        if (!Manager.DidComplete) {
             trace.Trace.Clear();
             trace.Checksum = 0;
-            trace.FilePath = "";
+            trace.FilePath = null;
+            return;
         }
         
         if (!traceCache.ContainsKey(trace.Checksum)) traceCache[trace.Checksum] = [];
@@ -142,11 +143,11 @@ internal static class TasTracer {
 
             if (hasMismatch) {
                 ToastManager.Toast("TAS nondeterminism detected!");
+                Log.Info($"Check traces at {traceDirRoot}");
             }
         }
 
         checksumTraces.Add(trace with { Trace = [..trace.Trace] });
-
         SaveTrace(trace);
     }
 
