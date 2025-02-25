@@ -17,6 +17,6 @@ public static class FramerateCommand {
         if (!int.TryParse(commandLine.Arguments[0], out var framerate))
             AbortTas($"Not a valid number: '{commandLine.Arguments[0]}'.");
 
-        InputHelper.SetFramerate(framerate);
+        InputHelper.SetTasFramerate(framerate);
     }
 }

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Reflection;
 using HarmonyLib;
@@ -14,13 +13,13 @@ public static class InputHelper {
     #region Actual TimeScale Patches
 
     private static float actualTimeScale = Time.timeScale;
-    
+
     [HarmonyPatch(typeof(InputManager), "UpdateInternal")]
     [HarmonyPrefix]
     public static void InControlManagerUpdateInternal() {
         // Log.TasTrace("-- (update incontrolmanager) --");
     }
-    
+
 
     [HarmonyPatch(typeof(RCGTime), nameof(RCGTime.timeScale), MethodType.Getter)]
     [HarmonyPrefix]
@@ -54,42 +53,45 @@ public static class InputHelper {
 
     #endregion
 
-    
+
     [HarmonyPatch(typeof(Actor), nameof(Actor.OnRebindAnimatorMove))]
     [HarmonyPatch(typeof(Actor), nameof(Actor.Move))]
     [HarmonyPrefix]
     public static bool DontRunWhenPaused() => Manager.CurrState != Manager.State.Paused;
 
-    public static void WriteActualTime() {
+    /*public static void WriteActualTime() {
         Time.timeScale = actualTimeScale;
     }
 
     public static void StopActualTime() {
         Time.timeScale = 0;
     }
-
-
     private static Action inputManagerUpdateInternal =
         AccessTools.MethodDelegate<Action>(AccessTools.Method(typeof(InputManager), "UpdateInternal"));
+    */
 
     private const int DefaultTasFramerate = 60;
 
-    public static void UnlockTargetFramerate() {
-        Application.targetFrameRate = 0;
+    private record FramerateState(int TargetFramerate, int VsyncCount) {
+        public static FramerateState Save() => new(Application.targetFrameRate, QualitySettings.vSyncCount);
+
+        public void Restore() {
+            Application.targetFrameRate = TargetFramerate;
+            QualitySettings.vSyncCount = VsyncCount;
+        }
     }
 
-    public static void LockTargetFramerate() {
-        Application.targetFrameRate = Time.captureFramerate;
-    }
-
-
-    public static void SetFramerate(int framerate) {
-        if (Application.targetFrameRate == Time.captureFramerate) Application.targetFrameRate = framerate;
+    public static void SetTasFramerate(int framerate) {
+        // If we have 1:1 tas playback, keep that
+        if (Application.targetFrameRate == Time.captureFramerate) {
+            Application.targetFrameRate = framerate;
+        }
 
         Time.captureFramerate = framerate;
     }
 
-    private static int? previousTargetFramerate;
+
+    private static FramerateState framerateState = FramerateState.Save();
 
     [EnableRun]
     private static void EnableRun() {
@@ -100,14 +102,10 @@ public static class InputHelper {
         // typeof(InputManager).SetFieldValue("currentTick", 0U);
         // typeof(InputManager).SetFieldValue("currentTime", 0f);
 
-        SetFramerate(DefaultTasFramerate);
-
-        if (previousTargetFramerate == null) {
-            previousTargetFramerate = Application.targetFrameRate;
-            UnlockTargetFramerate();
-        }
-        
-        Log.TasTrace($"Set targetFramerate={Application.targetFrameRate} captureFramerate={Time.captureFramerate}");
+        framerateState = FramerateState.Save();
+        Time.captureFramerate = DefaultTasFramerate;
+        Application.targetFrameRate = DefaultTasFramerate;
+        QualitySettings.vSyncCount = 0;
     }
 
     [DisableRun]
@@ -116,14 +114,8 @@ public static class InputHelper {
         InputManager.ClearInputState();
         // inputManagerUpdateInternal.Invoke();
 
+        framerateState.Restore();
         Time.captureFramerate = 0;
-
-        if (previousTargetFramerate is { } framerate) {
-            Application.targetFrameRate = framerate;
-            previousTargetFramerate = null;
-        }
-        
-        Log.TasTrace($"Reset targetFramerate={Application.targetFrameRate} captureFramerate={Time.captureFramerate}");
     }
 
     private static InputFrame? currentFeed = null;
@@ -138,8 +130,8 @@ public static class InputHelper {
     [HarmonyPostfix]
     public static void InputManagerUpdate() {
         if (!Manager.Running) return;
-        
-        TasTracerState.AddFrameHistory("InputManager.Update"/*, InputManager.CurrentTick, InputManager.CurrentTime*/);
+
+        TasTracerState.AddFrameHistory("InputManager.Update" /*, InputManager.CurrentTick, InputManager.CurrentTime*/);
     }
 
 
@@ -163,6 +155,7 @@ public static class InputHelper {
                 __result = true;
             }
         }
+
         return false;
     }
 }
