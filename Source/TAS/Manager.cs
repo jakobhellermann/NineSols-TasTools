@@ -120,8 +120,7 @@ public static class Manager {
     public static void DisableRunLater() => NextState = State.Disabled;
 
     public static void EnablePause() {
-        // TODO use rcg timescale
-        Time.timeScale = 0;
+        TimeHelper.OverwriteTimeScale = 0;
 
         prePauseAnimatorState = Player.i != null ? AnimatorSnapshot.Snapshot(Player.i.animator) : null;
         
@@ -134,7 +133,8 @@ public static class Manager {
             snapshot.Restore(Player.i.animator);
             snapshot = null;
         }
-        Time.timeScale = 1;
+
+        TimeHelper.OverwriteTimeScale = null;
     }
 
 

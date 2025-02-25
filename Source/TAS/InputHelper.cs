@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Reflection;
 using HarmonyLib;
 using InControl;
 using StudioCommunication;
@@ -10,63 +9,13 @@ namespace TAS;
 
 [HarmonyPatch]
 public static class InputHelper {
-    #region Actual TimeScale Patches
-
-    private static float actualTimeScale = Time.timeScale;
-
-    [HarmonyPatch(typeof(InputManager), "UpdateInternal")]
-    [HarmonyPrefix]
-    public static void InControlManagerUpdateInternal() {
-        // Log.TasTrace("-- (update incontrolmanager) --");
-    }
-
-
-    [HarmonyPatch(typeof(RCGTime), nameof(RCGTime.timeScale), MethodType.Getter)]
-    [HarmonyPrefix]
-    private static bool TimeScaleGet(ref float __result) {
-        __result = actualTimeScale;
-        return false;
-    }
-
-    [HarmonyPatch(typeof(RCGTime), nameof(RCGTime.timeScale), MethodType.Setter)]
-    [HarmonyPrefix]
-    private static bool TimeScaleSet(ref float value) {
-        actualTimeScale = value;
-        // Time.timeScale = value;
-        return false;
-    }
-
-    [HarmonyPatch(typeof(RCGTime), nameof(RCGTime.GlobalSimulationSpeed), MethodType.Setter)]
-    [HarmonyPrefix]
-    public static bool GlobalSimSpeedSet(float value) {
-        var field = typeof(RCGTime).GetField("_globalSimulationSpeed", BindingFlags.NonPublic | BindingFlags.Static);
-        if (field is null) {
-            Log.Error("Could not set _globalSimulationSpeed: field does not exist");
-            return true;
-        }
-
-        field.SetValue(null, value);
-        // Time.timeScale = RCGTime._globalSimulationSpeed * actualTimeScale;
-
-        return false;
-    }
-
-    #endregion
-
-
     [HarmonyPatch(typeof(Actor), nameof(Actor.OnRebindAnimatorMove))]
     [HarmonyPatch(typeof(Actor), nameof(Actor.Move))]
     [HarmonyPatch(typeof(Player), "Update")]
     [HarmonyPrefix]
     public static bool DontRunWhenPaused() => Manager.CurrState != Manager.State.Paused;
 
-    /*public static void WriteActualTime() {
-        Time.timeScale = actualTimeScale;
-    }
-
-    public static void StopActualTime() {
-        Time.timeScale = 0;
-    }
+    /*
     private static Action inputManagerUpdateInternal =
         AccessTools.MethodDelegate<Action>(AccessTools.Method(typeof(InputManager), "UpdateInternal"));
     */
