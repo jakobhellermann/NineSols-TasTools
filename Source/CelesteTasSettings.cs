@@ -1,11 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using BepInEx.Configuration;
-using Microsoft.Xna.Framework.Input;
 using StudioCommunication;
 using TAS.Communication;
-using UnityEngine;
 
 namespace TAS.Module;
 

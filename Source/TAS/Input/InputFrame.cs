@@ -1,12 +1,7 @@
-using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 using StudioCommunication;
-using UnityEngine;
 using Keys = UnityEngine.KeyCode;
 
 namespace TAS.Input;
@@ -14,9 +9,9 @@ namespace TAS.Input;
 public record InputFrame {
     // Controller state
     public readonly Actions Actions;
-    public readonly Vector2 StickPosition;
-    public readonly Vector2 DashOnlyStickPosition;
-    public readonly Vector2 MoveOnlyStickPosition;
+    // public readonly Vector2 StickPosition;
+    // public readonly Vector2 DashOnlyStickPosition;
+    // public readonly Vector2 MoveOnlyStickPosition;
     public readonly HashSet<Keys> PressedKeys = [];
 
     // libTAS state

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using JetBrains.Annotations;
-using NineSolsAPI;
 using StudioCommunication;
 using TAS.Communication;
 using TAS.Input;
