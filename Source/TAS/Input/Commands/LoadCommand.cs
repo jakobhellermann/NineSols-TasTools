@@ -70,8 +70,15 @@ public static class LoadCommand {
         player.movementCounter = Vector2.zero;
 
         player.ChangeState(PlayerStateType.Normal);
-        player.animator.Rebind();
-        player.animator.Update(0f);
+        var snapshot = new AnimatorSnapshot {
+            StateHash = 1432961145,
+            NormalizedTime = 0,
+            ParamsFloat = new Dictionary<int, float>(),
+            ParamsInt = new Dictionary<int, int>(),
+            ParamsBool = new Dictionary<int, bool>(),
+        };
+        snapshot.Restore(Player.i.animator);
+
         player.Velocity = Vector2.zero;
         player.AnimationVelocity = Vector3.zero;
         player.Facing = Facings.Right;
