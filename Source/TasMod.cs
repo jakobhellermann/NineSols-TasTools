@@ -17,7 +17,7 @@ using UnityEngine;
 namespace TAS;
 
 [BepInDependency(NineSolsAPICore.PluginGUID)]
-[BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
+[BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
 public class TasMod : BaseUnityPlugin {
     public static TasMod Instance = null!;
     public CelesteTasSettings TasSettings = null!;
@@ -74,14 +74,14 @@ public class TasMod : BaseUnityPlugin {
 
             if (TasSettings.AttemptConnectStudio) CommunicationWrapper.Start();
         } catch (Exception e) {
-            Log.Error($"Failed to load {PluginInfo.PLUGIN_GUID}: {e}");
+            Log.Error($"Failed to load {MyPluginInfo.PLUGIN_GUID}: {e}");
         }
 
         // https://giannisakritidis.com/blog/Early-And-Super-Late-Update-In-Unity/
         PlayerLoopHelper.AddAction(PlayerLoopTiming.EarlyUpdate, new PlayerLoopItem(this, EarlyUpdate));
         PlayerLoopHelper.AddAction(PlayerLoopTiming.PostLateUpdate, new PlayerLoopItem(this, PostLateUpdate));
 
-        Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
+        Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded!");
     }
 
     private class PlayerLoopItem(TasMod mb, Action action) : IPlayerLoopItem {
