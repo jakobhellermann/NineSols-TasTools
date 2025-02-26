@@ -84,7 +84,7 @@ enum TracePauseMode {
 
 internal static class TasTracer {
     private static string traceDirRoot = Path.Combine(Path.GetTempPath(), "TAS-Traces");
-    public const TracePauseMode TracePauseMode = Tracer.TracePauseMode.Reduced;
+    public const TracePauseMode TracePauseMode = Tracer.TracePauseMode.None;
     private const bool CheckMismatches = true;
 
     [Initialize]
@@ -123,7 +123,7 @@ internal static class TasTracer {
         if (!traceCache.ContainsKey(trace.Checksum)) traceCache[trace.Checksum] = [];
         var checksumTraces = traceCache[trace.Checksum];
 
-        if (checksumTraces.Count > 0 && CheckMismatches) {
+        if (checksumTraces.Count > 0 && CheckMismatches && TracePauseMode == TracePauseMode.None) {
             var previousTrace = checksumTraces[^1];
             var len = Math.Min(previousTrace.Trace.Count, trace.Trace.Count);
 
