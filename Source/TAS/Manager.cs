@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
+using DebugModPlus;
 using JetBrains.Annotations;
-using NineSolsAPI;
 using StudioCommunication;
 using TAS.Communication;
 using TAS.Input;
@@ -122,16 +122,17 @@ public static class Manager {
     public static void EnablePause() {
         // TODO use rcg timescale
         Time.timeScale = 0;
+
+        prePauseAnimatorState = Player.i != null ? AnimatorSnapshot.Snapshot(Player.i.animator) : null;
         
-        stashedAnimDeltaMove = Player.i?.AnimationDeltaMove;
     }
 
-    private static Vector3? stashedAnimDeltaMove = Vector3.zero;
+    public static AnimatorSnapshot? prePauseAnimatorState = null;
     
     public static void DisablePause() {
-        if (Player.i && stashedAnimDeltaMove is {} deltaMove) {
-            Player.i.AnimationDeltaMove = deltaMove;
-            // ToastManager.Toast($"Restoring AnimationDeltaMove {deltaMove}");
+        if (Player.i && prePauseAnimatorState is {} snapshot) {
+            snapshot.Restore(Player.i.animator);
+            snapshot = null;
         }
         Time.timeScale = 1;
     }
