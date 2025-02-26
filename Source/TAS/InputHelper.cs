@@ -56,6 +56,7 @@ public static class InputHelper {
 
     [HarmonyPatch(typeof(Actor), nameof(Actor.OnRebindAnimatorMove))]
     [HarmonyPatch(typeof(Actor), nameof(Actor.Move))]
+    [HarmonyPatch(typeof(Player), "Update")]
     [HarmonyPrefix]
     public static bool DontRunWhenPaused() => Manager.CurrState != Manager.State.Paused;
 
