@@ -131,7 +131,7 @@ public static class InputHelper {
     public static void InputManagerUpdate() {
         if (!Manager.Running) return;
 
-        TasTracerState.AddFrameHistory("InputManager.Update" /*, InputManager.CurrentTick, InputManager.CurrentTime*/);
+        // TasTracerState.AddFrameHistory("InputManager.Update" /*, InputManager.CurrentTick, InputManager.CurrentTime*/);
     }
 
 

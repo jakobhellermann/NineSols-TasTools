@@ -19,13 +19,19 @@ public static class TasTracerState {
     }
     
     private static readonly List<(string, Func<object?>)> traceVarsThroughFrame = [
-        ("playerPos", () => Player.i?.transform.position),
+        /*("snapshot", () =>  (
+            Player.i.animator.GetCurrentAnimatorStateInfo(0).fullPathHash,
+            Player.i.animator.GetCurrentAnimatorStateInfo(0).normalizedTime
+            ))*/
+        // ("playerPos", () => Player.i?.transform.position),
     ];
     public static void TraceVarsThroughFrame(string phase) {
         var vars = traceVarsThroughFrame
             .ToDictionary(x => x.Item1, x => x.Item2.Invoke());
-        AddFrameHistory($"ThroughFrame-{phase}", vars);
-        AddFrameHistoryPaused($"ThroughFrame-{phase}", vars);
+        if (vars.Count > 0) {
+            AddFrameHistory($"ThroughFrame-{phase}", vars);
+            AddFrameHistoryPaused($"ThroughFrame-{phase}", vars);
+        }
     }
 
 
@@ -74,7 +80,7 @@ public static class TasTracerState {
          data.Add("AnimationTime", player?.animator.GetCurrentAnimatorStateInfo(0).normalizedTime);
          // data.Add("PlayerState", playerState);
          data.Add("Info", GameInfo.StudioInfo);
-         
+
          data.Add("FrameHistory", new List<object?[]>(frameHistory));
     }
 }

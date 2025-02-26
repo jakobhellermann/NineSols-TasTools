@@ -99,6 +99,21 @@ public class TasMod : BaseUnityPlugin {
         
         TasTracerState.TraceVarsThroughFrame("EarlyUpdate");
     }
+    
+    private void FixedUpdate() {
+        Log.TasTrace($"-- FixedUpdate dt={Time.fixedDeltaTime}--");
+        
+        // TasTracerState.TraceVarsThroughFrame("FixedUpdate");
+    }
+    private void Update() {
+        Log.TasTrace($"-- Update dt={Time.deltaTime}-- ");
+        
+        TasTracerState.TraceVarsThroughFrame("Update");
+    }
+
+    private void LateUpdate() {
+        TasTracerState.TraceVarsThroughFrame("LateUpdate");
+    }
 
     private void PostLateUpdate() {
         TasTracerState.TraceVarsThroughFrame("PostLateUpdate");
@@ -129,17 +144,17 @@ public class TasMod : BaseUnityPlugin {
             
             AttributeUtils.Invoke<BeforeTasFrame>();
                 
-            TasTracerState.AddFrameHistory("StateBefore", new TracerIrrelevantState($"{Manager.CurrState} -> {Manager.NextState}"));
-            TasTracerState.AddFrameHistory("UpdateMeta");
+            // TasTracerState.AddFrameHistory("StateBefore", new TracerIrrelevantState($"{Manager.CurrState} -> {Manager.NextState}"));
+            // TasTracerState.AddFrameHistory("UpdateMeta");
             Manager.UpdateMeta();
             if (Manager.Running) {
-                TasTracerState.AddFrameHistory("Update");
+                // TasTracerState.AddFrameHistory("Update");
                 Manager.Update();
             }
             Log.TasTrace($"State: {Manager.CurrState} -> {Manager.NextState}");
             TasTracerState.AddFrameHistory("StateAfter", new TracerIrrelevantState($"{Manager.CurrState} -> {Manager.NextState}"));
             
-            TasTracerState.AddFrameHistory("ADM End", $"{Player.i?.AnimationDeltaMove}");
+            // TasTracerState.AddFrameHistory("ADM End", $"{Player.i?.AnimationDeltaMove}");
 
             // TODO: ensure consistent fixedupdate
         } catch (Exception e) {
@@ -147,21 +162,6 @@ public class TasMod : BaseUnityPlugin {
             Manager.DisableRun();
         }
         
-    }
-
-    private void FixedUpdate() {
-        Log.TasTrace($"-- FixedUpdate dt={Time.fixedDeltaTime}--");
-        
-        // TasTracerState.TraceVarsThroughFrame("FixedUpdate");
-    }
-    private void Update() {
-        Log.TasTrace($"-- Update dt={Time.deltaTime}-- ");
-        
-        TasTracerState.TraceVarsThroughFrame("Update");
-    }
-
-    private void LateUpdate() {
-        TasTracerState.TraceVarsThroughFrame("LateUpdate");
     }
 
     private void OnDestroy() {
