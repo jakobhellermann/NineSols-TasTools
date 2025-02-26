@@ -109,6 +109,13 @@ public class TasMod : BaseUnityPlugin {
         Log.TasTrace($"-- Update dt={Time.deltaTime}-- ");
         
         TasTracerState.TraceVarsThroughFrame("Update");
+
+        if (Manager.CurrState == Manager.State.Paused) {
+            Manager.UpdateMeta();
+            if (Manager.CurrState == Manager.State.Paused && Manager.NextState != Manager.State.Paused) {
+                Manager.DisablePause();
+            }
+        }
     }
 
     private void LateUpdate() {
@@ -146,7 +153,9 @@ public class TasMod : BaseUnityPlugin {
                 
             // TasTracerState.AddFrameHistory("StateBefore", new TracerIrrelevantState($"{Manager.CurrState} -> {Manager.NextState}"));
             // TasTracerState.AddFrameHistory("UpdateMeta");
-            Manager.UpdateMeta();
+            if (Manager.CurrState != Manager.State.Paused) {
+                Manager.UpdateMeta();
+            }
             if (Manager.Running) {
                 // TasTracerState.AddFrameHistory("Update");
                 Manager.Update();

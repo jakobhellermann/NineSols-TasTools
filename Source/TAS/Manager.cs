@@ -142,9 +142,6 @@ public static class Manager {
         if (CurrState != State.Paused && NextState == State.Paused) {
             EnablePause();
         }
-        if (CurrState == State.Paused && NextState != State.Paused) {
-            DisablePause();
-        }
         
         if (!Running && NextState == State.Running) {
             EnableRun();
