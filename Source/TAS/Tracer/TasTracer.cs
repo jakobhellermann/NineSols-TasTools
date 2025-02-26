@@ -222,8 +222,13 @@ internal static class TasTracer {
 
     private static void DeleteDirectoryChildren(string path) {
         if (!Directory.Exists(path)) return;
-        foreach (var dir in Directory.GetDirectories(path)) {
-            Directory.Delete(dir, true);
+
+        try {
+            foreach (var dir in Directory.GetDirectories(path)) {
+                Directory.Delete(dir, true);
+            }
+        } catch (Exception e) {
+            Log.Debug($"Failed to delete old traces: {e}");
         }
     }
 
