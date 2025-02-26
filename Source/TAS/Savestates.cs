@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using NineSolsAPI;
 using TAS.Input;
 using TAS.ModInterop;
+using TAS.Tracer;
 using TAS.UnityInterop;
 
 namespace TAS;
