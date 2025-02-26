@@ -96,7 +96,7 @@ public static class Manager {
         AttributeUtils.Invoke<EnableRunAttribute>();
 
         // This needs to happen after EnableRun, otherwise the input state will be reset in BindingHelper.SetTasBindings
-        // Savestates.EnableRun();
+        Savestates.EnableRun();
     }
 
     public static void DisableRun() {
@@ -155,7 +155,7 @@ public static class Manager {
 
         CurrState = NextState;
 
-        // Savestates.Update();
+        Savestates.Update();
 
         if (!Running || CurrState == State.Paused || IsLoading()) {
             return;
@@ -219,7 +219,7 @@ public static class Manager {
         }
 
         Hotkeys.UpdateMeta();
-        // Savestates.UpdateMeta();
+        Savestates.UpdateMeta();
         AttributeUtils.Invoke<UpdateMetaAttribute>();
 
         SendStudioState();

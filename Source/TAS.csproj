@@ -58,6 +58,8 @@
 
         <PackageReference Include="NineSolsAPI" Version="1.2.0" IncludeAssets="compile" />
         <ProjectReference Include="../CelesteTAS/StudioCommunication/StudioCommunication.csproj" />
+        
+        <ProjectReference Include="../../DebugModPlus/Source/DebugModPlus.csproj" />
     </ItemGroup>
 
     <Target Name="CheckReferences" BeforeTargets="BeforeBuild">

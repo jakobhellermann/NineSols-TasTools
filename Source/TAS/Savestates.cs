@@ -1,29 +1,17 @@
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using Celeste;
-using Celeste.Mod.SpeedrunTool.SaveLoad;
-using Monocle;
-using System;
-using System.Diagnostics.CodeAnalysis;
-using TAS.EverestInterop;
+using System.Threading.Tasks;
+using NineSolsAPI;
 using TAS.Input;
 using TAS.ModInterop;
-using TAS.Module;
-using TAS.Utils;
+using TAS.UnityInterop;
 
 namespace TAS;
 
-/// Handles saving / loading game state with SpeedrunTool
+/// Handles saving / loading game state with DebugMosPlus
 public static class Savestates {
-    // These fields can't just be pulled from the current frame and therefore need to be saved too
-    private static readonly Dictionary<FieldInfo, object?> SavedGameInfo = new() {
-        {typeof(GameInfo).GetFieldInfo(nameof(GameInfo.LastPos)), null},
-        {typeof(GameInfo).GetFieldInfo(nameof(GameInfo.LastDiff)), null},
-        {typeof(GameInfo).GetFieldInfo(nameof(GameInfo.LastPlayerSeekerPos)), null},
-        {typeof(GameInfo).GetFieldInfo(nameof(GameInfo.LastPlayerSeekerDiff)), null},
-    };
-
+    private const string SavestateSlot = "main";
+    
     private static bool savedByBreakpoint;
     private static int savedChecksum;
     private static InputController? savedController;
@@ -31,10 +19,10 @@ public static class Savestates {
     private static int SavedLine =>
         (savedByBreakpoint
             ? Manager.Controller.FastForwards.GetValueOrDefault(SavedCurrentFrame)?.Line
-            : Manager.Controller.Inputs!.GetValueOrDefault(SavedCurrentFrame)?.Line) ?? -1;
+            : Manager.Controller.Inputs.GetValueOrDefault(SavedCurrentFrame)?.Line) ?? -1;
 
     public static int StudioHighlightLine => IsSaved_Safe ? SavedLine : -1;
-    private static int SavedCurrentFrame => IsSaved ? savedController.CurrentFrameInTas : -1;
+    private static int SavedCurrentFrame => IsSaved ? savedController!.CurrentFrameInTas : -1;
 
     private static bool BreakpointHasBeenDeleted => IsSaved &&
                                                     savedByBreakpoint &&
@@ -42,9 +30,9 @@ public static class Savestates {
 
     public static bool IsSaved_Safe => SpeedrunToolInterop.Installed && IsSaved;
 
-    [MemberNotNullWhen(true, nameof(savedController))]
-    private static bool IsSaved => StateManager.Instance.IsSaved &&
-                                   StateManager.Instance.SavedByTas &&
+    // [MemberNotNullWhen(true, nameof(savedController))]
+    private static bool IsSaved => /*StateManager.Instance.IsSaved &&
+                                   StateManager.Instance.SavedByTas &&*/
                                    savedController != null &&
                                    savedController.FilePath == Manager.Controller.FilePath;
 
@@ -73,8 +61,8 @@ public static class Savestates {
 
         // Autoload state after entering the level, if the TAS was started outside the level
         if (Manager.Running && IsSaved
-            && Engine.Scene is Level
-            && Manager.Controller.CurrentFrameInTas < savedController.CurrentFrameInTas
+            /* && Engine.Scene is Level*/
+            && Manager.Controller.CurrentFrameInTas < savedController!.CurrentFrameInTas
         ) {
             LoadState();
         }
@@ -103,22 +91,23 @@ public static class Savestates {
 
     // Called explicitly to ensure correct execution order
     internal static void EnableRun() {
-        if (SpeedrunToolInterop.Installed && IsSaved && Engine.Scene is Level) {
+        if (SpeedrunToolInterop.Installed && IsSaved /*&& Engine.Scene is Level */) {
             LoadState();
         }
     }
 
     public static void SaveState(bool byBreakpoint) {
         if (IsSaved &&
-            Manager.Controller.CurrentFrameInTas == savedController.CurrentFrameInTas &&
+            Manager.Controller.CurrentFrameInTas == savedController!.CurrentFrameInTas &&
             savedChecksum == Manager.Controller.CalcChecksum(savedController.CurrentFrameInTas))
         {
             return; // Already saved
         }
 
-        if (!StateManager.Instance.SaveState()) {
+        if (!DebugModPlus.DebugModPlus.Instance.SavestateModule.CreateSavestate(SavestateSlot)) {
             return;
         }
+        TasTracer.SavestateCreate();
 
         savedByBreakpoint = byBreakpoint;
         savedChecksum = Manager.Controller.CalcChecksum(Manager.Controller.CurrentFrameInTas);
@@ -129,20 +118,25 @@ public static class Savestates {
 
     public static void LoadState() {
         // Don't load save-states while recording
-        if (TASRecorderInterop.IsRecording) {
+        /*if (TASRecorderInterop.IsRecording) {
             return;
-        }
+        }*/
 
         if (IsSaved) {
-            if (!BreakpointHasBeenDeleted && savedChecksum == Manager.Controller.CalcChecksum(savedController.CurrentFrameInTas)) {
+            if (!BreakpointHasBeenDeleted && savedChecksum == Manager.Controller.CalcChecksum(savedController!.CurrentFrameInTas)) {
                 if (Manager.Controller.CurrentFrameInTas == savedController.CurrentFrameInTas) {
                     // Don't repeat loading the state, just play
                     Manager.NextState = Manager.State.Running;
                     return;
                 }
 
-                if (Engine.Scene is Level) {
-                    StateManager.Instance.LoadState();
+                if (/*Engine.Scene is Level*/ true) {
+                    Task result = DebugModPlus.DebugModPlus.Instance.SavestateModule.LoadSavestateAt(SavestateSlot);
+                    TasTracer.SavestateLoad();
+                    if (!result.IsCompleted) {
+                        ToastManager.Toast("Savestate did not load in a single frame, this is not supported in TAS");
+                    }
+                    
                     Manager.Controller.CopyProgressFrom(savedController);
 
                     LoadGameInfo();
@@ -156,7 +150,7 @@ public static class Savestates {
     }
 
     public static void ClearState() {
-        StateManager.Instance.ClearState();
+        // StateManager.Instance.ClearState();
         ClearGameInfo();
         savedByBreakpoint = false;
         savedChecksum = -1;
@@ -166,21 +160,21 @@ public static class Savestates {
     }
 
     private static void SaveGameInfo() {
-        foreach (FieldInfo fieldInfo in SavedGameInfo.Keys.ToList()) {
+        /*foreach (FieldInfo fieldInfo in SavedGameInfo.Keys.ToList()) {
             SavedGameInfo[fieldInfo] = fieldInfo.GetValue(null);
-        }
+        }*/
     }
 
     private static void LoadGameInfo() {
-        foreach (FieldInfo fieldInfo in SavedGameInfo.Keys.ToList()) {
+        /*foreach (FieldInfo fieldInfo in SavedGameInfo.Keys.ToList()) {
             fieldInfo.SetValue(null, SavedGameInfo[fieldInfo]);
-        }
+        }*/
     }
 
     private static void ClearGameInfo() {
-        foreach (FieldInfo fieldInfo in SavedGameInfo.Keys.ToList()) {
+        /*foreach (FieldInfo fieldInfo in SavedGameInfo.Keys.ToList()) {
             SavedGameInfo[fieldInfo] = null;
-        }
+        }*/
     }
 
     private static void SetTasState() {
@@ -188,6 +182,7 @@ public static class Savestates {
             Manager.CurrState = Manager.NextState = Manager.State.Running;
         } else {
             Manager.CurrState = Manager.NextState = Manager.State.Paused;
+            Manager.EnablePause();
         }
     }
 

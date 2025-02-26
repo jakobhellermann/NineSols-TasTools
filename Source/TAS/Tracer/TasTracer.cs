@@ -110,6 +110,18 @@ internal static class TasTracer {
         trace.Checksum = Manager.Controller.Checksum;
         trace.FilePath = Manager.Controller.FilePath.Replace(@"\", "/");
     }
+    
+    public static void SavestateCreate() {
+        // trace.Trace.Clear();
+        TasTracerState.AddFrameHistory("savestate created");
+        TasTracerState.AddFrameHistoryPaused("savestate created");
+    }
+    public static void SavestateLoad() {
+        // trace.Trace.Clear();
+        TasTracerState.AddFrameHistory("savestate loaded");
+        TasTracerState.AddFrameHistoryPaused("savestate loaded", Player.i.AnimationVelocity);
+    }
+
 
     [DisableRun]
     private static void EndTrace() {

@@ -1,6 +1,7 @@
 ﻿using NineSolsAPI;
+using TAS;
 
-namespace DebugModPlus;
+namespace TAS;
 
 using System.Collections.Generic;
 using UnityEngine;
