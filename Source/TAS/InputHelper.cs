@@ -84,15 +84,23 @@ public static class InputHelper {
         // TasTracerState.AddFrameHistory("InputManager.Update" /*, InputManager.CurrentTick, InputManager.CurrentTime*/);
     }
 
-
     private static Dictionary<Actions, Key> actionKeyMap = new() {
-        { Actions.Jump, Key.Space },
-        { Actions.Dash, Key.LeftShift },
         { Actions.Up, Key.W },
         { Actions.Down, Key.S },
         { Actions.Left, Key.A },
         { Actions.Right, Key.D },
-        { Actions.Grab, Key.K },
+        
+        { Actions.Jump, Key.Space },
+        { Actions.Dash, Key.LeftShift },
+        
+        { Actions.Interact, Key.E },
+        { Actions.Attack, Key.J },
+        { Actions.Shoot, Key.C },
+        { Actions.Parry, Key.K },
+        
+        { Actions.Talisman, Key.F },
+        { Actions.Nymph, Key.Q },
+        { Actions.Heal, Key.R },
     };
 
     [HarmonyPatch(typeof(UnityKeyboardProvider), nameof(UnityKeyboardProvider.GetKeyIsPressed))]
