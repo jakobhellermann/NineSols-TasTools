@@ -84,6 +84,7 @@ public static class LoadCommand {
         player.Facing = Facings.Right;
         player.jumpState = Player.PlayerJumpState.None;
         player.varJumpSpeed = 0;
+        player.dashCooldownTimer = 0;
         
         player.GroundCheck();
         Physics2D.SyncTransforms();
