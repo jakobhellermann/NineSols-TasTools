@@ -24,6 +24,8 @@ public class UpdateMetaAttribute : Attribute;
 
 /// Main controller, which manages how the TAS is played back
 public static class Manager {
+    private const bool PauseOnEndDraft = false;
+    
     public enum State {
         /// No TAS is currently active
         Disabled,
@@ -176,8 +178,7 @@ public static class Manager {
 
         // Auto-pause at end of drafts
         if (!Controller.CanPlayback && IsDraft()) {
-            // NextState = State.Paused;
-            NextState = State.Disabled;
+            NextState = PauseOnEndDraft ? State.Paused : State.Disabled;
         }
         // Pause the TAS if breakpoint is hit
         // Special-case for end of regular files, to update *Time-commands
