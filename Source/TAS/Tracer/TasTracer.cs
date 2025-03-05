@@ -155,8 +155,8 @@ internal static class TasTracer {
         Log.TasTrace("Collect trace data");
 
         var data = new TraceData();
-        var inputFrame = Manager.Controller.Previous!;
-        data.Add("Frame", inputFrame.Actions.ToString());
+        var inputFrame = Manager.Controller.Previous;
+        if(inputFrame != null) data.Add("Frame", inputFrame.Actions.ToString());
         data.Add("FrameOffset", Manager.Controller.CurrentFrameInTas);
         AttributeUtils.Invoke<TasTraceAddState>([data]);
 
