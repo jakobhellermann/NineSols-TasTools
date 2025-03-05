@@ -78,10 +78,13 @@ public class TasMod : BaseUnityPlugin {
         }
 
         // https://giannisakritidis.com/blog/Early-And-Super-Late-Update-In-Unity/
-        PlayerLoopHelper.AddAction(PlayerLoopTiming.EarlyUpdate, new PlayerLoopItem(this, EarlyUpdate));
-        PlayerLoopHelper.AddAction(PlayerLoopTiming.PostLateUpdate, new PlayerLoopItem(this, PostLateUpdate));
 
         Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded!");
+    }
+
+    private void Start() {
+        PlayerLoopHelper.AddAction(PlayerLoopTiming.EarlyUpdate, new PlayerLoopItem(this, EarlyUpdate));
+        PlayerLoopHelper.AddAction(PlayerLoopTiming.PostLateUpdate, new PlayerLoopItem(this, PostLateUpdate));
     }
 
     private class PlayerLoopItem(TasMod mb, Action action) : IPlayerLoopItem {
