@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using HarmonyLib;
+using TAS.Utils;
 using UnityEngine;
 
 namespace TAS;
@@ -64,8 +65,10 @@ public class GameInfo {
 
             if (player.jumpState != Player.PlayerJumpState.None) {
                 var varJumpTimer = player.currentVarJumpTimer;
+                var groundReference = player.GetFieldValue<float>("GroundJumpRefrenceY");
+                var height = player.transform.position.y - groundReference;
                 text +=
-                    $"JumpState {player.jumpState} {(varJumpTimer > 0 ? varJumpTimer.ToString("0.00") : "")}\n";
+                    $"JumpState {player.jumpState} {(varJumpTimer > 0 ? varJumpTimer.ToString("0.00") : "")} h={height}\n";
             } else text += "\n";
 
             var animInfo = player.animator.GetCurrentAnimatorStateInfo(0);
