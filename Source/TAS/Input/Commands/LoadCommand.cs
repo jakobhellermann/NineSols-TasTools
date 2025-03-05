@@ -59,7 +59,7 @@ public static class LoadCommand {
                 findMode = SceneConnectionPoint.FindConnectionMode.ID,
             }, false);
         }
-        gameCore.ResetLevel();
+        // gameCore.ResetLevel();
 
         if (Player.i is not { } player) {
             AbortTas("Could not find player");
