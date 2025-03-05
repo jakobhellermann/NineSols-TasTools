@@ -47,7 +47,7 @@ public static class TasTracerState {
     [HarmonyPatch(typeof(Player), "Update")]
     [HarmonyPrefix]
     private static void PlayerUpdate() {
-        frameHistory.Add(["Player.Update", Time.deltaTime, AnimatorSnapshot.Snapshot(Player.i.animator)]);
+        frameHistory.Add(["Player.Update", Time.deltaTime]);
     }
 
     [HarmonyPatch(typeof(PlayerAnimatorEvents), nameof(PlayerAnimatorEvents.AnimationDone))]

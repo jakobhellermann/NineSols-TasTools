@@ -133,7 +133,7 @@ public static class Manager {
     public static void DisablePause() {
         if (Player.i && prePauseAnimatorState is {} snapshot) {
             snapshot.Restore(Player.i.animator);
-            snapshot = null;
+            prePauseAnimatorState = null;
         }
 
         TimeHelper.OverwriteTimeScale = null;

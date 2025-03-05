@@ -77,6 +77,7 @@ public static class LoadCommand {
             ParamsBool = new Dictionary<int, bool>(),
         };
         snapshot.Restore(Player.i.animator);
+        Player.i.animator.Update(0);
 
         player.Velocity = Vector2.zero;
         player.AnimationVelocity = Vector3.zero;
