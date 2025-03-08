@@ -28,8 +28,9 @@ public static class LoadCommand {
     [TasCommand("load", MetaDataProvider = typeof(LoadMeta))]
     private static void Load(CommandLine commandLine, int studioLine, string filePath, int fileLine) {
         Log.TasTrace("Executing Load Command");
-        if (commandLine.Arguments.Length != 3)
+        if (commandLine.Arguments.Length != 3) {
             AbortTas($"Invalid number of arguments in load command: '{commandLine.OriginalText}'.");
+        }
 
         var scene = commandLine.Arguments[0];
         var xString = commandLine.Arguments[1];
@@ -49,23 +50,30 @@ public static class LoadCommand {
             AbortTas("Attempted to start TAS outside of a level");
             return;
         }
+
         var gameCore = GameCore.Instance;
 
         if (gameCore.gameLevel?.SceneName != scene) {
             gameCore.ChangeSceneCompat(new SceneConnectionPoint.ChangeSceneData {
-                sceneName = scene,
-                playerSpawnPosition = () => new Vector3(x, y, 0),
-                changeSceneMode = SceneConnectionPoint.ChangeSceneMode.Teleport,
-                findMode = SceneConnectionPoint.FindConnectionMode.ID,
-            }, false);
+                    sceneName = scene,
+                    playerSpawnPosition = () => new Vector3(x, y, 0),
+                    changeSceneMode = SceneConnectionPoint.ChangeSceneMode.Teleport,
+                    findMode = SceneConnectionPoint.FindConnectionMode.ID,
+                },
+                false);
         }
         // gameCore.ResetLevel();
 
+        Normalize(new Vector2(x, y));
+    }
+
+    public static void Normalize(Vector2 position) {
         if (Player.i is not { } player) {
             AbortTas("Could not find player");
             return;
         }
-        player.transform.position = player.transform.position with { x = x, y = y };
+
+        player.transform.position = player.transform.position with { x = position.x, y = position.y };
         player.movementCounter = Vector2.zero;
 
         player.ChangeState(PlayerStateType.Normal);
@@ -85,11 +93,11 @@ public static class LoadCommand {
         player.jumpState = Player.PlayerJumpState.None;
         player.varJumpSpeed = 0;
         player.dashCooldownTimer = 0;
-        
+
         player.GroundCheck();
         Physics2D.SyncTransforms();
-        
-        foreach(var condition in ConditionTimer.Instance.AllConditions) {
+
+        foreach (var condition in ConditionTimer.Instance.AllConditions) {
             condition.SetFieldValue("_isFalseTimer", float.PositiveInfinity);
         }
 
