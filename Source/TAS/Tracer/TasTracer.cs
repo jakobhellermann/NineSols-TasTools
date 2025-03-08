@@ -42,7 +42,7 @@ public class TraceData {
         if (ReferenceEquals(this, obj)) return true;
         if (obj is not TraceData b) return false;
         if (!EqualsHelper.CompareDeep(Data, b.Data, out var failurePath, out var left, out var right)) {
-            ToastManager.Toast($"{left} != {right} at TraceData{failurePath}");
+            Log.Warn($"{left} != {right} at TraceData{failurePath}");
             return false;
         }
 
@@ -130,20 +130,20 @@ internal static class TasTracer {
             bool hasMismatch = false;
 
             if (previousTrace.Trace.Count != trace.Trace.Count) {
-                ToastManager.Toast($"Length mismatch: {previousTrace.Trace.Count} != {trace.Trace.Count}");
+                Log.Warn($"Length mismatch: {previousTrace.Trace.Count} != {trace.Trace.Count}");
                 hasMismatch = true;
             } else
                 for (var i = 0; i < len; i++) {
                     if (!EqualsHelper.CompareDeep(previousTrace.Trace[i], trace.Trace[i], out var failurePath,
                             out var left, out var right)) {
-                        ToastManager.Toast($"{left} != {right} at frame {i}: TraceData{failurePath}");
+                        Log.Warn($"{left} != {right} at frame {i}: TraceData{failurePath}");
                         hasMismatch = true;
                     }
                 }
 
             if (hasMismatch) {
-                ToastManager.Toast("TAS nondeterminism detected!");
-                Log.Info($"Check traces at {traceDirRoot}");
+                Log.Warn("TAS nondeterminism detected!");
+                Log.Warn($"Check traces at {traceDirRoot}");
             }
         }
 
